@@ -1,0 +1,54 @@
+body {
+    margin: 0;
+    font-family: "Inter", 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #eeeeee;
+    color: #333333;
+}
+
+.app {
+    max-width: 720px;
+    margin: 40px auto;
+    padding: 16px;
+}
+
+.add-title {
+    margin: 0 0 16px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.add-form {
+    display: grid;
+    grid-template-columns: auto;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.add-task {
+    padding: 12px 14px;
+    border: 1px solid #008080;
+    border-radius: 5px;
+    background: #fff;
+    font: inherit;
+}
+
+.add-task:focus {
+    outline: none;
+    border-color:#008080;
+    box-shadow: 0 0 4px #008080;
+}
+
+.add-btn {
+    padding: 12px 12px;
+    border: 1px solid gray;
+    border-radius: 2px;
+    background: #fff;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.add-btn:hover {
+    border-color: #008080;
+    box-shadow: 0 0 4px #008080;
+}
+
