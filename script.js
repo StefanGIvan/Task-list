@@ -28,7 +28,7 @@ function addTask(text) {
     spanText.textContent = text;
 
     label.appendChild(checkbox);
-    label.appendChild(span);
+    label.appendChild(spanText);
 
     const delBtn = document.createElement("button");
     delBtn.classList.add("delete-btn");
@@ -38,7 +38,7 @@ function addTask(text) {
         li.classList.toggle("completed", checkbox.checked);
     });
 
-    delBtn.addEleventListener("click", () =>{
+    delBtn.addEventListener("click", () =>{
         li.remove();
     });
 
