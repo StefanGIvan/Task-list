@@ -1,54 +1,114 @@
 body {
-    margin: 0;
-    font-family: "Inter", 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #eeeeee;
-    color: #333333;
+  margin: 0;
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #eeeeee;
+  color: #333333;
 }
 
 .app {
-    max-width: 720px;
-    margin: 40px auto;
-    padding: 16px;
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 16px;
 }
 
 .add-title {
-    margin: 0 0 16px;
-    font-weight: 700;
-    text-align: center;
+  margin: 0 0 16px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .add-form {
-    display: grid;
-    grid-template-columns: auto;
-    gap: 10px;
-    margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: auto;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .add-task {
-    padding: 12px 14px;
-    border: 1px solid #008080;
-    border-radius: 5px;
-    background: #fff;
-    font: inherit;
+  padding: 12px 14px;
+  border: 1px solid #008080;
+  border-radius: 5px;
+  background: #fff;
+  font: inherit;
 }
 
 .add-task:focus {
-    outline: none;
-    border-color:#008080;
-    box-shadow: 0 0 4px #008080;
+  outline: none;
+  border-color: #008080;
+  box-shadow: 0 0 4px #008080;
 }
 
 .add-btn {
-    padding: 12px 12px;
-    border: 1px solid gray;
-    border-radius: 2px;
-    background: #fff;
-    font-weight: 500;
-    cursor: pointer;
+  margin-bottom: 40px;
+  padding: 12px 12px;
+  border: 1px solid gray;
+  border-radius: 2px;
+  background: #fff;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .add-btn:hover {
-    border-color: #008080;
-    box-shadow: 0 0 4px #008080;
+  border-color: #008080;
+  box-shadow: 0 0 4px #008080;
 }
 
+.task-checkbox {
+}
+
+.add-list {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-content: flex-start;
+  gap: 40px;
+  padding-left: 0px;
+  margin: 0px;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-grow: 2;
+  gap: 12px;
+}
+
+.task {
+  display: flex;
+  flex-directon: row;
+}
+
+.task-title {
+  font-size: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.task-checkbox {
+  width: 18px;
+  height: 18px;
+}
+
+.task-checkbox:hover {
+  box-shadow: 0 0 4px 1px #008080;
+}
+
+.delete-btn {
+  border: none;
+  outline: none;
+}
+
+.delete-btn:hover {
+  background-color: #008080;
+  box-shadow: 0 0 4px 8px #008080;
+}
+
+.delete-icon {
+  height: 30px;
+  width: 30px;
+  display: block;
+  cursor: pointer;
+}
