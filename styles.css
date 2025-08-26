@@ -69,9 +69,6 @@ body {
   box-shadow: 0 0 4px var(--blue);
 }
 
-.task-checkbox {
-}
-
 .add-list {
   display: flex;
   flex-direction: column;
@@ -94,22 +91,11 @@ body {
 
 .item {
   display: flex;
-  align-items: center;
+  align-items: space-around;
   gap: 15px;
   flex: 0 1 auto;
   background-color: gray;
   padding: 10px;
-}
-
-.task {
-  display: flex;
-  align-items: space-around;
-  gap: 6px;
-  flex: 1 1 auto;
-  min-width: 0;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  word-break: break-word;
 }
 
 .task-checkbox {
@@ -123,6 +109,11 @@ body {
 
 .task-title {
   display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
   flex-wrap: wrap;
   text-wrap: wrap;
   font-size: 20px;
@@ -142,6 +133,24 @@ body {
 }
 
 .delete-icon {
+  height: 30px;
+  width: 30px;
+  display: block;
+  cursor: pointer;
+}
+
+.edit-btn {
+  border: none;
+  outline: none;
+  background-color: gray;
+}
+
+.edit-btn:hover {
+  background-color: var(--blue);
+  box-shadow: 0 0 4px 8px var(--blue);
+}
+
+.edit-icon {
   height: 30px;
   width: 30px;
   display: block;
