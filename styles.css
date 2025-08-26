@@ -61,37 +61,32 @@ body {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: space-around;
   align-content: space-around;
   gap: 40px;
   width: 80%;
   margin: 0 auto;
   box-sizing: border-box;
-  padding-left: 0px;
+  padding-left: 0 20px;
   list-style: none;
 }
 
 .item {
   display: flex;
-  flex: 1;
-  flex-direction: row;
-  overflow-wrap: break-word;
-  min-width: 0px;
   align-items: center;
-  flex-grow: 0;
-  flex-shrink: 1;
-  flex-basis: auto;
-  gap: 12px;
+  gap: 15px;
+  flex: 0 1 auto;
 }
 
 .task {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex: 1;
-  min-width: 0px;
-  white-space: normal;
+  align-items: space-around;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  word-wrap: break-word;
   overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .task-checkbox {
@@ -104,9 +99,11 @@ body {
 }
 
 .task-title {
+  display: flex;
+  flex-wrap: wrap;
+  text-wrap: wrap;
   font-size: 20px;
-  padding-left: 20px;
-  padding-right: 20px;
+  padding: 0 20px;
 }
 
 .delete-btn {
