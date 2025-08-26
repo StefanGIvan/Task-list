@@ -32,7 +32,7 @@ function addTask(text) {
 
   const delBtn = document.createElement("button");
   delBtn.classList.add("delete-btn");
-  delBtn.innerHTML = `<img src="icons8-delete.svg" alt="Delete Button" class="delete-icon"/>`;
+  delBtn.innerHTML = `<img src="trashcan.svg" alt="Delete Button" class="delete-icon"/>`;
 
   checkbox.addEventListener("change", () => {
     li.classList.toggle("completed", checkbox.checked);
