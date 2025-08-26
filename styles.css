@@ -1,8 +1,18 @@
+:root {
+  --teal: #008080;
+  --gray: #383838;
+  --black: #0b0b0d;
+  --white: #fff;
+  --blue: #009fdb;
+  --green: #90d3a1;
+  --red: #d29090;
+}
+
 body {
   margin: 0;
   font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #eeeeee;
-  color: #333333;
+  background: var(--gray);
+  color: var(--black);
 }
 
 .app {
@@ -16,6 +26,7 @@ body {
   margin: 0 0 16px;
   font-weight: 700;
   text-align: center;
+  color: white;
 }
 
 .add-form {
@@ -27,31 +38,35 @@ body {
 
 .add-task {
   padding: 12px 14px;
-  border: 1px solid #008080;
-  border-radius: 5px;
-  background: #fff;
+  border-radius: 10px;
+  background: var(--gray);
   font: inherit;
+  color: white;
+}
+
+.add-task::placeholder {
+  color: white;
+  opacity: 0.8;
 }
 
 .add-task:focus {
   outline: none;
-  border-color: #008080;
-  box-shadow: 0 0 4px #008080;
+  border-color: var(--teal);
+  box-shadow: 0 0 4px var(--blue);
 }
 
 .add-btn {
   margin-bottom: 40px;
   padding: 12px 12px;
-  border: 1px solid gray;
-  border-radius: 2px;
-  background: #fff;
+  border-radius: 10px;
+  background: var(--blue);
+  color: white;
   font-weight: 500;
   cursor: pointer;
 }
 
 .add-btn:hover {
-  border-color: #008080;
-  box-shadow: 0 0 4px #008080;
+  box-shadow: 0 0 4px var(--blue);
 }
 
 .task-checkbox {
@@ -67,8 +82,9 @@ body {
   width: 80%;
   margin: 0 auto;
   box-sizing: border-box;
-  padding-left: 0 20px;
+  padding: 30px;
   list-style: none;
+  background-color: black;
 }
 
 .item {
@@ -76,6 +92,7 @@ body {
   align-items: center;
   gap: 15px;
   flex: 0 1 auto;
+  background-color: gray;
 }
 
 .task {
@@ -95,7 +112,7 @@ body {
 }
 
 .task-checkbox:hover {
-  box-shadow: 0 0 4px 1px #008080;
+  box-shadow: 0 0 4px 1px var(--teal);
 }
 
 .task-title {
@@ -104,16 +121,18 @@ body {
   text-wrap: wrap;
   font-size: 20px;
   padding: 0 20px;
+  color: white;
 }
 
 .delete-btn {
   border: none;
   outline: none;
+  background-color: gray;
 }
 
 .delete-btn:hover {
-  background-color: #008080;
-  box-shadow: 0 0 4px 8px #008080;
+  background-color: var(--blue);
+  box-shadow: 0 0 4px 8px var(--blue);
 }
 
 .delete-icon {
