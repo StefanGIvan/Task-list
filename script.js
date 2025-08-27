@@ -1,8 +1,14 @@
 const form = document.getElementById("form");
 const input = document.getElementById("task");
-const list = document.getElementById("list");
+const template =
+  document.getElementById("task-template").content.firstElementChild;
+const ulist = document.getElementById("task-list");
 
-let tasksArray = [];
+const tasks = [];
+let count = 1;
+function newTaskId() {
+  return count++;
+}
 
 // const modelTask = {
 //   title: "Sample Task",
@@ -22,37 +28,24 @@ form.addEventListener("submit", function (e) {
 });
 
 function addTask(text) {
-  const li = document.createElement("li");
-  li.classList.add("item");
+  const li = template.cloneNode(true);
+  li.dataset.id = newTaskId();
 
-  const checkbox = document.createElement("input");
+  const checkbox = li.querySelector(".task-checkbox");
   checkbox.type = "checkbox";
-  checkbox.classList.add("task-checkbox");
-
-  const spanText = document.createElement("span");
-  spanText.classList.add("task-title");
-  spanText.textContent = text;
-
-  li.appendChild(checkbox);
-  li.appendChild(spanText);
-
-  const delBtn = document.createElement("button");
-  delBtn.classList.add("delete-btn");
-  delBtn.innerHTML = `<img src="trashcan.svg" alt="Delete Button" class="delete-icon"/>`;
-
-  const editBtn = document.createElement("button");
-  editBtn.classList.add("edit-btn");
-  editBtn.innerHTML = `<img src="pencil.svg " alt="Edit Button" class="edit-icon"/>`;
 
   checkbox.addEventListener("change", () => {
     li.classList.toggle("completed", checkbox.checked);
   });
 
+  li.querySelector(".task-title").textContent = text;
+
+  const delBtn = li.querySelector(".delete-btn");
   delBtn.addEventListener("click", () => {
     li.remove();
   });
 
-  //code for editing tasks
+  const editBtn = li.querySelector(".edit-btn");
   editBtn.addEventListener("click", () => {
     const span = li.querySelector(".task-title");
     span.contentEditable = true;
@@ -73,8 +66,5 @@ function addTask(text) {
     span.addEventListener("blur", finishedEditing);
     span.addEventListener("keydown", onEnter);
   });
-
-  li.appendChild(delBtn);
-  li.appendChild(editBtn);
-  list.appendChild(li);
+  ulist.appendChild(li);
 }

@@ -15,7 +15,7 @@
   </head>
 
   <body>
-    <main class="app" aria-labelledby="app-title">
+    <div class="app" aria-labelledby="app-title">
       <h1 id="title" class="add-title">Task List</h1>
       <br />
 
@@ -32,8 +32,25 @@
           Add
         </button>
       </form>
-    </main>
-    <ul id="list" class="add-list" aria-live="polite"></ul>
+    </div>
+
+    <div>
+      <ul class="add-list" id="task-list" aria-live="polite"></ul>
+    </div>
+
+    <!-- Hidden Task List Template -->
+    <template id="task-template">
+      <li class="item">
+        <input type="checkbox" class="task-checkbox" />
+        <span class="task-title"></span>
+        <button class="delete-btn">
+          <img src="trashcan.svg" alt="Delete" class="delete-icon" />
+        </button>
+        <button class="edit-btn">
+          <img src="pencil.svg" alt="Edit" class="edit-icon" />
+        </button>
+      </li>
+    </template>
 
     <noscript>You need to allow Javascript for the page to load.</noscript>
     <script src="script.js" defer></script>

@@ -19,6 +19,7 @@ body {
   width: 100%;
   max-width: 720px;
   margin: 40px auto;
+  margin-bottom: 0px;
   padding: 16px;
 }
 
@@ -40,7 +41,6 @@ body {
   padding: 12px 14px;
   border-radius: 10px;
   background: var(--gray);
-  font: inherit;
   color: white;
 }
 
@@ -67,6 +67,12 @@ body {
 
 .add-btn:hover {
   box-shadow: 0 0 4px var(--blue);
+}
+
+.title-paragraph {
+  text-align: center;
+  color: white;
+  font-size: 20px;
 }
 
 .add-list {
