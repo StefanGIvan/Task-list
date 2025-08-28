@@ -4,7 +4,7 @@ const template =
   document.getElementById("task-template").content.firstElementChild;
 const ulist = document.getElementById("task-list");
 
-const tasks = [];
+let tasks = [];
 let count = 1;
 function newTaskId() {
   return count++;
@@ -18,39 +18,42 @@ function newTaskId() {
 //todo: array JS to keep state
 //template model
 
-function addTask(text) {
+function addTask(task) {
   const li = template.cloneNode(true);
-  li.dataset.id = newTaskId(); //count & assign id
+  li.dataset.id = task.id;
 
   const checkbox = li.querySelector(".task-checkbox");
-  checkbox.type = "checkbox";
+  checkbox.checked = !!task.completed;
 
   checkbox.addEventListener("change", () => {
-    tasks.completed = checkbox.checked;
+    const t = tasks.find((t) => t.id === task.id);
+    if (t) t.completed = checkbox.checked;
     li.classList.toggle("completed", checkbox.checked);
     persist(); // keep storage persistent
   });
 
-  li.querySelector(".task-title").textContent = text;
+  const titleSpan = li.querySelector(".task-title");
+  titleSpan.textContent = task.title;
 
   const delBtn = li.querySelector(".delete-btn");
   delBtn.addEventListener("click", () => {
-    deleteTask(tasks.id); //
+    deleteTask(task.id);
     li.remove();
-    persist(); //
+    persist();
   });
 
   const editBtn = li.querySelector(".edit-btn");
   editBtn.addEventListener("click", () => {
-    const span = li.querySelector(".task-title");
-    span.contentEditable = true;
-    span.focus();
+    titleSpan.contentEditable = true;
+    titleSpan.focus();
 
     const finishedEditing = () => {
-      span.contentEditable = false;
-      span.removeEventListener("blur", finishedEditing);
-      span.removeEventListener("keydown", onEnter);
-      task.title = span.textContent.trim(); //
+      titleSpan.contentEditable = false;
+      const t = tasks.find((t) => t.id === task.id);
+      if (t) t.title = titleSpan.textContent.trim();
+      titleSpan.removeEventListener("blur", finishedEditing);
+      titleSpan.removeEventListener("keydown", onEnter);
+      persist();
     };
 
     const onEnter = (e) => {
@@ -59,15 +62,16 @@ function addTask(text) {
         finishedEditing();
       }
     };
-    span.addEventListener("blur", finishedEditing);
-    span.addEventListener("keydown", onEnter);
+    titleSpan.addEventListener("blur", finishedEditing);
+    titleSpan.addEventListener("keydown", onEnter);
   });
+  li.classList.toggle("completed", task.completed);
   ulist.appendChild(li);
 }
 //update the Array
 function updateArray(text) {
   const task = {
-    id: count,
+    id: newTaskId(),
     title: text.trim(),
     completed: false,
   };
@@ -94,6 +98,9 @@ function load() {
     const parsed = JSON.parse(stored);
     if (Array.isArray(parsed)) {
       tasks = parsed;
+
+      const maxId = tasks.reduce((m, t) => Math.max(m, Number(t.id) || 0), 0);
+      count = maxId + 1;
       tasks.forEach((task) => addTask(task));
     }
   } catch (_) {
