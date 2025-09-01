@@ -30,8 +30,8 @@ body {
 }
 
 .add-form {
-  display: grid;
-  grid-template-columns: auto;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   margin-bottom: 30px;
 }
