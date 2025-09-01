@@ -18,8 +18,7 @@ body {
 .app {
   width: 100%;
   max-width: 720px;
-  margin: 40px auto;
-  margin-bottom: 0px;
+  margin: 40px auto 0;
   padding: 16px;
 }
 
@@ -27,25 +26,25 @@ body {
   margin: 0 0 16px;
   font-weight: 700;
   text-align: center;
-  color: white;
+  color: var(--white);
 }
 
 .add-form {
   display: grid;
   grid-template-columns: auto;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 30px;
 }
 
 .add-task {
   padding: 12px 14px;
   border-radius: 10px;
   background: var(--gray);
-  color: white;
+  color: var(--white);
 }
 
 .add-task::placeholder {
-  color: white;
+  color: var(--white);
   opacity: 0.8;
 }
 
@@ -60,7 +59,7 @@ body {
   padding: 12px 12px;
   border-radius: 10px;
   background: var(--blue);
-  color: white;
+  color: var(--white);
   font-weight: 700;
   cursor: pointer;
 }
@@ -71,24 +70,19 @@ body {
 
 .title-paragraph {
   text-align: center;
-  color: white;
+  color: var(--white);
   font-size: 20px;
 }
 
 .add-list {
   display: flex;
   flex-direction: column;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  align-content: flex-start;
   gap: 2px;
-  width: fit-content;
   max-width: 80%;
   margin: 0 auto;
   box-sizing: border-box;
   padding: 15px;
-  list-style: none;
-  background-color: black;
+  background-color: var(--black);
 }
 
 .add-list:empty {
@@ -97,14 +91,14 @@ body {
 
 .item {
   display: flex;
-  align-items: space-around;
+  align-items: center;
   gap: 15px;
-  flex: 0 1 auto;
-  background-color: gray;
+  background-color: var(--gray);
   padding: 10px;
 }
 
 .task-checkbox {
+  flex: 0 0 auto;
   width: 18px;
   height: 18px;
 }
@@ -114,23 +108,17 @@ body {
 }
 
 .task-title {
-  display: flex;
   flex: 1 1 auto;
   min-width: 0;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  flex-wrap: wrap;
-  text-wrap: wrap;
   font-size: 20px;
   padding: 0 20px;
-  color: white;
+  color: var(--white);
 }
 
 .delete-btn {
   border: none;
   outline: none;
-  background-color: gray;
+  background-color: var(--gray);
 }
 
 .delete-btn:hover {
@@ -148,7 +136,7 @@ body {
 .edit-btn {
   border: none;
   outline: none;
-  background-color: gray;
+  background-color: var(--gray);
 }
 
 .edit-btn:hover {

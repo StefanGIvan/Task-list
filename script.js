@@ -99,11 +99,14 @@ function load() {
     if (Array.isArray(parsed)) {
       tasks = parsed;
 
-      const maxId = tasks.reduce((m, t) => Math.max(m, Number(t.id) || 0), 0);
+      const maxId = tasks.reduce(
+        (acc, t) => Math.max(acc, Number(t.id) || 0),
+        0
+      );
       count = maxId + 1;
       tasks.forEach((task) => addTask(task));
     }
-  } catch (_) {
+  } catch (err) {
     console.error("Could not parse tasks from localStorage.");
   }
 }
