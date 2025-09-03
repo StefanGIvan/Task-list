@@ -15,46 +15,46 @@ body {
   color: var(--black);
 }
 
-.app {
+.task-list-widget {
   width: 100%;
   max-width: 720px;
   margin: 40px auto 0;
   padding: 16px;
 }
 
-.add-title {
+.title {
   margin: 0 0 16px;
   font-weight: 700;
   text-align: center;
   color: var(--white);
 }
 
-.add-form {
+.form {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-bottom: 30px;
 }
 
-.add-task {
+.task-input {
   padding: 12px 14px;
   border-radius: 10px;
   background: var(--gray);
   color: var(--white);
 }
 
-.add-task::placeholder {
+.task-input::placeholder {
   color: var(--white);
   opacity: 0.8;
 }
 
-.add-task:focus {
+.task-input:focus {
   outline: none;
   border-color: var(--teal);
   box-shadow: 0 0 4px var(--blue);
 }
 
-.add-btn {
+.btn {
   margin-bottom: 40px;
   padding: 12px 12px;
   border-radius: 10px;
@@ -64,14 +64,21 @@ body {
   cursor: pointer;
 }
 
-.add-btn:hover {
+.btn:hover {
   box-shadow: 0 0 4px var(--blue);
 }
 
-.title-paragraph {
-  text-align: center;
-  color: var(--white);
-  font-size: 20px;
+.list-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
+  padding: 15px;
+  background-color: var(--black);
+}
+
+.list-header-hidden {
+  display: none;
 }
 
 .add-list {

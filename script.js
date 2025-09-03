@@ -1,24 +1,41 @@
-const form = document.getElementById("form");
-const input = document.getElementById("task");
+const form = document.getElementsByClassName("form");
+const input = document.getElementsByClassName("task");
 const template =
-  document.getElementById("task-template").content.firstElementChild;
+  document.getElementsByClassName("task-template").content.firstElementChild;
 const ulist = document.getElementById("task-list");
-
+console.log("widget initializing");
 let tasks = [];
 let count = 1;
 function newTaskId() {
   return count++;
 }
 
-// const modelTask = {
-//   title: "Sample Task",
-//   completed: false,
-// };
+function getOrCreateHeader() {
+  //If it already exists, we show it
+  let header = document.querySelector(".list-header");
+  if (header) return header;
 
-//todo: array JS to keep state
-//template model
+  //Create once
+  header = document.createElement("div");
+  header.className = "list-header-hidden";
+  header.innerHTML = `
+  <span>Select</span>
+  <span>Task</task>
+  <span class="actions-title">Actions</span>`;
+
+  ulist.parentElement.insertBefore(header, ulist);
+  return header;
+}
+
+function headerVisibility() {
+  const header = getOrCreateHeader();
+  //show if we have at least one task on DOM/hide if none
+  if (tasks.length > 0) header.classList.remove("hidden");
+  else header.classList.add("hidden");
+}
 
 function addTask(task) {
+  console.log("adding task");
   const li = template.cloneNode(true);
   li.dataset.id = task.id;
 
@@ -67,6 +84,7 @@ function addTask(task) {
   });
   li.classList.toggle("completed", task.completed);
   ulist.appendChild(li);
+  headerVisibility();
 }
 //update the Array
 function updateArray(text) {
@@ -82,8 +100,8 @@ function updateArray(text) {
 //delete a certain list
 function deleteTask(id) {
   tasks = tasks.filter((t) => t.id !== id);
+  headerVisibility();
 }
-
 //put the array in localStorage
 function persist() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
@@ -92,23 +110,29 @@ function persist() {
 //take the string array from the localStorage
 function load() {
   const stored = localStorage.getItem("tasks");
-  if (!stored) return;
+
+  if (!stored) {
+    console.log("node tasks in memory");
+    return;
+  }
 
   try {
     const parsed = JSON.parse(stored);
     if (Array.isArray(parsed)) {
+      console.log("tasks in memory: " + tasks.length);
       tasks = parsed;
 
       const maxId = tasks.reduce(
         (acc, t) => Math.max(acc, Number(t.id) || 0),
         0
       );
-      count = maxId + 1;
+      count = maxId + 1; // complexitate
       tasks.forEach((task) => addTask(task));
     }
   } catch (err) {
     console.error("Could not parse tasks from localStorage.");
   }
+  headerVisibility();
 }
 
 form.addEventListener("submit", (e) => {

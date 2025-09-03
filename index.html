@@ -15,31 +15,31 @@
   </head>
 
   <body>
-    <div class="app" aria-labelledby="app-title">
-      <h1 id="title" class="add-title">Task List</h1>
-      <!--CSS margin-bottom-->
+    <div class="task-list-widget" aria-labelledby="app-title">
+      <h1 class="title">Task List</h1>
 
-      <!--id used for JS; class used for CSS-->
-      <form id="form" class="add-form" autocomplete="off">
+      <form  class="form" autocomplete="off">
         <input
-          id="task"
-          class="add-task"
+          class="task-input"
           type="text"
           placeholder="Write a task..."
           aria-label="Write a new task"
         />
-        <button id="btn" class="add-btn" type="submit" aria-label="Add">
+        <button class="btn" type="submit" aria-label="Add">
           Add
         </button>
       </form>
-    </div>
 
-    <div>
-      <ul class="add-list" id="task-list" aria-live="polite"></ul>
+      <div>
+      <ul class="task-list" aria-live="polite"></ul>
+      <span>Select</span>
+  <span>Task</task>
+  <span class="actions-title">Actions</span>
+    </div>
     </div>
 
     <!-- Hidden Task List Template -->
-    <template id="task-template">
+    <template class="task-template">
       <li class="item">
         <input type="checkbox" class="task-checkbox" />
         <span class="task-title"></span>
