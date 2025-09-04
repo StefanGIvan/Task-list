@@ -15,44 +15,53 @@
   </head>
 
   <body>
-    <div class="task-list-widget" aria-labelledby="app-title">
-      <h1 class="title">Task List</h1>
+    <div class="task-widget">
+      <h1 class="task-widget-title">Task List</h1>
 
-      <form  class="form" autocomplete="off">
+      <form class="task-form" autocomplete="off">
         <input
           class="task-input"
           type="text"
           placeholder="Write a task..."
           aria-label="Write a new task"
         />
-        <button class="btn" type="submit" aria-label="Add">
-          Add
-        </button>
+        <button class="task-add-btn" type="submit" aria-label="Add">Add</button>
       </form>
 
-      <div>
-      <ul class="task-list" aria-live="polite"></ul>
-      <span>Select</span>
-  <span>Task</task>
-  <span class="actions-title">Actions</span>
-    </div>
+      <div class="task-container">
+        <div class="task-header task-header-hidden">
+          <span class="select">Select</span>
+          <span class="title">Task</span>
+          <span class="actions">Actions</span>
+        </div>
+        <ul class="task-list" aria-live="polite"></ul>
+      </div>
     </div>
 
     <!-- Hidden Task List Template -->
     <template class="task-template">
-      <li class="item">
+      <li class="task-item">
         <input type="checkbox" class="task-checkbox" />
         <span class="task-title"></span>
-        <button class="delete-btn">
-          <img src="assets/trashcan.svg" alt="Delete" class="delete-icon" />
+        <div class="task-actions">
+        <button class="task-delete-btn">
+          <img
+            src="assets/trashcan.svg"
+            alt="Delete"
+            class="task-delete-icon"
+          />
         </button>
-        <button class="edit-btn">
-          <img src="assets/pencil.svg" alt="Edit" class="edit-icon" />
+        <button class="task-edit-btn">
+          <img src="assets/pencil.svg" alt="Edit" class="task-edit-icon" />
         </button>
+      </div>
+        </li>
       </li>
     </template>
 
-    <noscript>You need to allow Javascript for the page to load.</noscript>
+    <noscript
+      >You need to allow Javascript in order for the page to load.</noscript
+    >
     <script src="script.js" defer></script>
   </body>
 </html>

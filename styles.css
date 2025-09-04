@@ -15,21 +15,21 @@ body {
   color: var(--black);
 }
 
-.task-list-widget {
+.task-widget {
   width: 100%;
   max-width: 720px;
   margin: 40px auto 0;
   padding: 16px;
 }
 
-.title {
+.task-widget-title {
   margin: 0 0 16px;
   font-weight: 700;
   text-align: center;
   color: var(--white);
 }
 
-.form {
+.task-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -54,7 +54,7 @@ body {
   box-shadow: 0 0 4px var(--blue);
 }
 
-.btn {
+.task-add-btn {
   margin-bottom: 40px;
   padding: 12px 12px;
   border-radius: 10px;
@@ -64,24 +64,56 @@ body {
   cursor: pointer;
 }
 
-.btn:hover {
+.task-add-btn:hover {
   box-shadow: 0 0 4px var(--blue);
 }
 
-.list-header {
+.task-container {
+  width: 80%;
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+.task-header {
   display: flex;
-  flex-direction: row;
   align-items: center;
+  width: 80%;
+  margin: auto auto 0;
   gap: 2px;
-  padding: 15px;
+  padding: 8px 12px;
+  color: var(--white);
   background-color: var(--black);
 }
 
-.list-header-hidden {
+.task-header-hidden {
   display: none;
 }
 
-.add-list {
+.task-header > .select {
+  flex: 1;
+  font-size: 20px;
+  padding: 0 20px;
+  background-color: var(--gray);
+  color: var(--white);
+}
+
+.task-header > .title {
+  flex: 1;
+  font-size: 20px;
+  padding: 0 20px;
+  background-color: var(--gray);
+  color: var(--white);
+}
+
+.task-header > .actions {
+  flex: 1;
+  font-size: 20px;
+  padding: 0 20px;
+  background-color: var(--gray);
+  color: var(--white);
+}
+
+.task-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -92,11 +124,11 @@ body {
   background-color: var(--black);
 }
 
-.add-list:empty {
+.task-list:empty {
   visibility: hidden;
 }
 
-.item {
+.task-item {
   display: flex;
   align-items: center;
   gap: 15px;
@@ -122,36 +154,36 @@ body {
   color: var(--white);
 }
 
-.delete-btn {
+.task-delete-btn {
   border: none;
   outline: none;
   background-color: var(--gray);
 }
 
-.delete-btn:hover {
+.task-delete-btn:hover {
   background-color: var(--blue);
   box-shadow: 0 0 4px 8px var(--blue);
 }
 
-.delete-icon {
+.task-delete-icon {
   height: 30px;
   width: 30px;
   display: block;
   cursor: pointer;
 }
 
-.edit-btn {
+.task-edit-btn {
   border: none;
   outline: none;
   background-color: var(--gray);
 }
 
-.edit-btn:hover {
+.task-edit-btn:hover {
   background-color: var(--blue);
   box-shadow: 0 0 4px 8px var(--blue);
 }
 
-.edit-icon {
+.task-edit-icon {
   height: 30px;
   width: 30px;
   display: block;

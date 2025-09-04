@@ -1,41 +1,24 @@
-const form = document.getElementsByClassName("form");
-const input = document.getElementsByClassName("task");
+const form = document.querySelector(".task-form");
+const input = document.querySelector(".task-input");
 const template =
-  document.getElementsByClassName("task-template").content.firstElementChild;
-const ulist = document.getElementById("task-list");
-console.log("widget initializing");
+  document.querySelector(".task-template").content.firstElementChild;
+const ulist = document.querySelector(".task-list");
+
 let tasks = [];
 let count = 1;
 function newTaskId() {
   return count++;
 }
 
-function getOrCreateHeader() {
-  //If it already exists, we show it
-  let header = document.querySelector(".list-header");
-  if (header) return header;
-
-  //Create once
-  header = document.createElement("div");
-  header.className = "list-header-hidden";
-  header.innerHTML = `
-  <span>Select</span>
-  <span>Task</task>
-  <span class="actions-title">Actions</span>`;
-
-  ulist.parentElement.insertBefore(header, ulist);
-  return header;
-}
-
 function headerVisibility() {
-  const header = getOrCreateHeader();
+  const header = document.querySelector(".task-header");
+  if (!header) return;
   //show if we have at least one task on DOM/hide if none
-  if (tasks.length > 0) header.classList.remove("hidden");
-  else header.classList.add("hidden");
+  if (tasks.length > 0) header.classList.remove("task-header-hidden");
+  else header.classList.add("task-header-hidden");
 }
 
 function addTask(task) {
-  console.log("adding task");
   const li = template.cloneNode(true);
   li.dataset.id = task.id;
 
@@ -45,21 +28,20 @@ function addTask(task) {
   checkbox.addEventListener("change", () => {
     const t = tasks.find((t) => t.id === task.id);
     if (t) t.completed = checkbox.checked;
-    li.classList.toggle("completed", checkbox.checked);
     persist(); // keep storage persistent
   });
 
   const titleSpan = li.querySelector(".task-title");
   titleSpan.textContent = task.title;
 
-  const delBtn = li.querySelector(".delete-btn");
+  const delBtn = li.querySelector(".task-delete-btn");
   delBtn.addEventListener("click", () => {
     deleteTask(task.id);
     li.remove();
     persist();
   });
 
-  const editBtn = li.querySelector(".edit-btn");
+  const editBtn = li.querySelector(".task-edit-btn");
   editBtn.addEventListener("click", () => {
     titleSpan.contentEditable = true;
     titleSpan.focus();
@@ -82,7 +64,6 @@ function addTask(task) {
     titleSpan.addEventListener("blur", finishedEditing);
     titleSpan.addEventListener("keydown", onEnter);
   });
-  li.classList.toggle("completed", task.completed);
   ulist.appendChild(li);
   headerVisibility();
 }
@@ -100,7 +81,7 @@ function updateArray(text) {
 //delete a certain list
 function deleteTask(id) {
   tasks = tasks.filter((t) => t.id !== id);
-  headerVisibility();
+  headerVisibility(); //check
 }
 //put the array in localStorage
 function persist() {
@@ -111,15 +92,11 @@ function persist() {
 function load() {
   const stored = localStorage.getItem("tasks");
 
-  if (!stored) {
-    console.log("node tasks in memory");
-    return;
-  }
+  if (!stored) return;
 
   try {
     const parsed = JSON.parse(stored);
     if (Array.isArray(parsed)) {
-      console.log("tasks in memory: " + tasks.length);
       tasks = parsed;
 
       const maxId = tasks.reduce(
