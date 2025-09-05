@@ -11,11 +11,11 @@ function newTaskId() {
 }
 
 function headerVisibility() {
-  const header = document.querySelector(".task-header");
+  const header = document.querySelector(".header-container");
   if (!header) return;
   //show if we have at least one task on DOM/hide if none
-  if (tasks.length > 0) header.classList.remove("task-header-hidden");
-  else header.classList.add("task-header-hidden");
+  if (tasks.length > 0) header.classList.remove("header-container-hidden");
+  else header.classList.add("header-container-hidden");
 }
 
 function addTask(task) {
@@ -103,7 +103,7 @@ function load() {
         (acc, t) => Math.max(acc, Number(t.id) || 0),
         0
       );
-      count = maxId + 1; // complexitate
+      count = maxId + 1; // complexity
       tasks.forEach((task) => addTask(task));
     }
   } catch (err) {

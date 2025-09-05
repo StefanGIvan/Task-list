@@ -28,12 +28,12 @@
         <button class="task-add-btn" type="submit" aria-label="Add">Add</button>
       </form>
 
-      <div class="task-container">
-        <div class="task-header task-header-hidden">
-          <span class="select">Select</span>
-          <span class="title">Task</span>
-          <span class="actions">Actions</span>
-        </div>
+      <div class="header-container header-container-hidden">
+        <li class="tasks-header">
+          <span class="header-select">Select</span>
+          <span class="header-title">Task</span>
+          <span class="header-actions">Actions</span>
+        </li>
         <ul class="task-list" aria-live="polite"></ul>
       </div>
     </div>
@@ -44,18 +44,17 @@
         <input type="checkbox" class="task-checkbox" />
         <span class="task-title"></span>
         <div class="task-actions">
-        <button class="task-delete-btn">
-          <img
-            src="assets/trashcan.svg"
-            alt="Delete"
-            class="task-delete-icon"
-          />
-        </button>
-        <button class="task-edit-btn">
-          <img src="assets/pencil.svg" alt="Edit" class="task-edit-icon" />
-        </button>
-      </div>
-        </li>
+          <button class="task-delete-btn">
+            <img
+              src="assets/trashcan.svg"
+              alt="Delete"
+              class="task-delete-icon"
+            />
+          </button>
+          <button class="task-edit-btn">
+            <img src="assets/pencil.svg" alt="Edit" class="task-edit-icon" />
+          </button>
+        </div>
       </li>
     </template>
 
