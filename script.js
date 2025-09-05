@@ -7,18 +7,23 @@ const ulist = document.querySelector(".task-list");
 let tasks = [];
 let count = 1;
 function newTaskId() {
-  return count++;
+  return count++; //nextId, a better name
 }
 
 function headerVisibility() {
   const header = document.querySelector(".header-container");
   if (!header) return;
   //show if we have at least one task on DOM/hide if none
-  if (tasks.length > 0) header.classList.remove("header-container-hidden");
-  else header.classList.add("header-container-hidden");
+  if (tasks.length > 0) {
+    header.classList.remove("header-container-hidden");
+  } else {
+    header.classList.add("header-container-hidden");
+  }
 }
 
 function addTask(task) {
+  //rename addTaskNode
+  //tasks replaced with task list variable name
   const li = template.cloneNode(true);
   li.dataset.id = task.id;
 
@@ -36,9 +41,9 @@ function addTask(task) {
 
   const delBtn = li.querySelector(".task-delete-btn");
   delBtn.addEventListener("click", () => {
-    deleteTask(task.id);
-    li.remove();
+    deleteTask(task.id); //a single function that did all 3 of them
     persist();
+    li.remove();
   });
 
   const editBtn = li.querySelector(".task-edit-btn");
@@ -48,8 +53,10 @@ function addTask(task) {
 
     const finishedEditing = () => {
       titleSpan.contentEditable = false;
-      const t = tasks.find((t) => t.id === task.id);
-      if (t) t.title = titleSpan.textContent.trim();
+      const t = tasks.find((t) => t.id === task.id); //no single letter
+      if (t) {
+        t.title = titleSpan.textContent.trim();
+      } //check for brackets
       titleSpan.removeEventListener("blur", finishedEditing);
       titleSpan.removeEventListener("keydown", onEnter);
       persist();
@@ -67,7 +74,7 @@ function addTask(task) {
   ulist.appendChild(li);
   headerVisibility();
 }
-//update the Array
+//update the Array - more specific, this case: add a task in the array
 function updateArray(text) {
   const task = {
     id: newTaskId(),
@@ -95,7 +102,7 @@ function load() {
   if (!stored) return;
 
   try {
-    const parsed = JSON.parse(stored);
+    const parsed = JSON.parse(stored); //what kind of objects are in the array
     if (Array.isArray(parsed)) {
       tasks = parsed;
 
@@ -103,7 +110,7 @@ function load() {
         (acc, t) => Math.max(acc, Number(t.id) || 0),
         0
       );
-      count = maxId + 1; // complexity
+      count = maxId + 1; // complexity;
       tasks.forEach((task) => addTask(task));
     }
   } catch (err) {
