@@ -4,26 +4,26 @@ const template =
   document.querySelector(".task-template").content.firstElementChild;
 const ulist = document.querySelector(".task-list");
 
-let tasks = [];
-let count = 1;
+let taskArray = [];
+let nextId = 1;
 function newTaskId() {
-  return count++; //nextId, a better name
+  return nextId++;
 }
 
 function headerVisibility() {
   const header = document.querySelector(".header-container");
-  if (!header) return;
-  //show if we have at least one task on DOM/hide if none
-  if (tasks.length > 0) {
+  if (!header) {
+    return;
+  }
+
+  if (taskArray.length > 0) {
     header.classList.remove("header-container-hidden");
   } else {
     header.classList.add("header-container-hidden");
   }
 }
 
-function addTask(task) {
-  //rename addTaskNode
-  //tasks replaced with task list variable name
+function renderTask(task) {
   const li = template.cloneNode(true);
   li.dataset.id = task.id;
 
@@ -31,20 +31,18 @@ function addTask(task) {
   checkbox.checked = !!task.completed;
 
   checkbox.addEventListener("change", () => {
-    const t = tasks.find((t) => t.id === task.id);
-    if (t) t.completed = checkbox.checked;
-    persist(); // keep storage persistent
+    const foundTask = taskArray.find((taskItem) => taskItem.id === task.id);
+    if (foundTask) {
+      foundTask.completed = checkbox.checked;
+    }
+    persist();
   });
 
   const titleSpan = li.querySelector(".task-title");
   titleSpan.textContent = task.title;
 
   const delBtn = li.querySelector(".task-delete-btn");
-  delBtn.addEventListener("click", () => {
-    deleteTask(task.id); //a single function that did all 3 of them
-    persist();
-    li.remove();
-  });
+  delBtn.addEventListener("click", () => handleDeleteTask(task.id, li));
 
   const editBtn = li.querySelector(".task-edit-btn");
   editBtn.addEventListener("click", () => {
@@ -53,10 +51,10 @@ function addTask(task) {
 
     const finishedEditing = () => {
       titleSpan.contentEditable = false;
-      const t = tasks.find((t) => t.id === task.id); //no single letter
-      if (t) {
-        t.title = titleSpan.textContent.trim();
-      } //check for brackets
+      const foundTask = taskArray.find((taskItem) => taskItem.id === task.id);
+      if (foundTask) {
+        foundTask.title = titleSpan.textContent.trim();
+      }
       titleSpan.removeEventListener("blur", finishedEditing);
       titleSpan.removeEventListener("keydown", onEnter);
       persist();
@@ -74,47 +72,54 @@ function addTask(task) {
   ulist.appendChild(li);
   headerVisibility();
 }
-//update the Array - more specific, this case: add a task in the array
-function updateArray(text) {
+
+function appendTask(text) {
   const task = {
     id: newTaskId(),
     title: text.trim(),
     completed: false,
   };
-  tasks.push(task);
-  addTask(task);
+  taskArray.push(task);
+  renderTask(task);
 }
 
-//delete a certain list
 function deleteTask(id) {
-  tasks = tasks.filter((t) => t.id !== id);
-  headerVisibility(); //check
-}
-//put the array in localStorage
-function persist() {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
+  taskArray = taskArray.filter((task) => task.id !== id);
+  headerVisibility();
 }
 
-//take the string array from the localStorage
+function persist() {
+  localStorage.setItem("taskArray", JSON.stringify(taskArray));
+}
+
+function handleDeleteTask(taskItem, li) {
+  deleteTask(taskItem);
+  persist();
+  li.remove();
+}
+
 function load() {
-  const stored = localStorage.getItem("tasks");
+  const stored = localStorage.getItem("taskArray");
 
   if (!stored) return;
 
   try {
     const parsed = JSON.parse(stored); //what kind of objects are in the array
     if (Array.isArray(parsed)) {
-      tasks = parsed;
+      taskArray = parsed;
 
-      const maxId = tasks.reduce(
-        (acc, t) => Math.max(acc, Number(t.id) || 0),
-        0
-      );
-      count = maxId + 1; // complexity;
-      tasks.forEach((task) => addTask(task));
+      let maxId = 0;
+      taskArray.forEach((task) => {
+        const idNum = Number(task.id);
+        if (idNum > maxId) {
+          maxId = idNum;
+        }
+      });
+      nextId = maxId + 1;
+      taskArray.forEach((task) => renderTask(task));
     }
   } catch (err) {
-    console.error("Could not parse tasks from localStorage.");
+    console.error("Could not parse taskArray from localStorage.");
   }
   headerVisibility();
 }
@@ -123,7 +128,7 @@ form.addEventListener("submit", (e) => {
   e.preventDefault();
   const text = input.value.trim();
   if (!text) return;
-  updateArray(text);
+  appendTask(text);
   persist();
   input.value = "";
 });

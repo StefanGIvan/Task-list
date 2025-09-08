@@ -32,14 +32,20 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin: 0 auto;
   max-width: 480px;
   gap: 10px;
   margin-bottom: 30px;
 }
 
+.task-form:has(.task-input:placeholder-shown) .task-add-btn {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .task-input {
   max-width: 250px;
-  width: 30%;
+  width: 100%;
   margin: 0 auto;
   padding: 12px 14px;
   border-radius: 10px;
@@ -60,7 +66,7 @@ body {
 
 .task-add-btn {
   max-width: 200px;
-  width: 30%;
+  width: 50%;
   margin: 0 auto;
   margin-bottom: 40px;
   padding: 12px 12px;
@@ -92,7 +98,7 @@ body {
   display: none;
 }
 
-.tasks-header {
+.taskArray-header {
   display: flex;
   align-items: center;
   gap: 2px;
@@ -102,18 +108,18 @@ body {
   background-color: var(--gray);
 }
 
-.tasks-header > .header-select {
+.taskArray-header > .header-select {
   flex: 0 1 auto;
   font-size: 20px;
 }
 
-.tasks-header > .header-title {
+.taskArray-header > .header-title {
   flex: 1 0 auto;
   font-size: 20px;
   padding-left: 5px;
 }
 
-.tasks-header > .header-actions {
+.taskArray-header > .header-actions {
   flex: 0 0 auto;
   font-size: 20px;
   padding-right: 20px;
@@ -147,7 +153,7 @@ body {
   background-color: var(--gray);
 }
 
-.task-checkbox {
+.task-item > .task-checkbox {
   flex: 0 0 auto;
   width: 18px;
   height: 18px;
@@ -157,7 +163,7 @@ body {
   box-shadow: 0 0 4px 1px var(--blue);
 }
 
-.task-title {
+.task-item > .task-title {
   flex: 1 1 auto;
   flex-wrap: wrap;
   min-width: 0;
@@ -167,7 +173,7 @@ body {
   padding: 0 40px;
 }
 
-.task-actions {
+.task-item > .task-actions {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
