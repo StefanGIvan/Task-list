@@ -98,7 +98,7 @@ function handleDeleteTask(taskItem, li) {
   li.remove();
 }
 
-function load() {
+function loadLocalStorage() {
   const stored = localStorage.getItem("taskArray");
 
   if (!stored) return;
@@ -133,4 +133,4 @@ form.addEventListener("submit", (e) => {
   input.value = "";
 });
 
-load();
+loadLocalStorage();
