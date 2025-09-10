@@ -15,28 +15,35 @@
   </head>
 
   <body>
-    <div class="task-widget">
-      <h1 class="task-widget-title">Task List</h1>
+    <!--structura de pagina cu 2 col cu divs care in fiecare coloana sa se initializeze widgets, cu id care o sa fie cheia pt fiecare widget-->
+    <div id="cicimimi"></div>
+    <div id="peste-prajit"></div>
+    <template class="tasks-widget-template">
+      <div class="task-widget">
+        <h1 class="task-widget-title">Task List</h1>
 
-      <form class="task-form" autocomplete="off">
-        <input
-          class="task-input"
-          type="text"
-          placeholder="Write a task..."
-          aria-label="Write a new task"
-        />
-        <button class="task-add-btn" type="submit" aria-label="Add">Add</button>
-      </form>
+        <form class="task-form" autocomplete="off">
+          <input
+            class="task-input"
+            type="text"
+            placeholder="Write a task..."
+            aria-label="Write a new task"
+          />
+          <button class="task-add-btn" type="submit" aria-label="Add">
+            Add
+          </button>
+        </form>
 
-      <div class="header-container header-container-hidden">
-        <div class="taskArray-header">
-          <span class="header-select">Select</span>
-          <span class="header-title">Task</span>
-          <span class="header-actions">Actions</span>
+        <div class="header-container header-container-hidden">
+          <div class="taskArray-header">
+            <span class="header-select">Select</span>
+            <span class="header-title">Task</span>
+            <span class="header-actions">Actions</span>
+          </div>
+          <ul class="task-list" aria-live="polite"></ul>
         </div>
-        <ul class="task-list" aria-live="polite"></ul>
       </div>
-    </div>
+    </template>
 
     <!-- Hidden Task List Template -->
     <template class="task-template">

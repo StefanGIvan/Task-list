@@ -10,7 +10,7 @@ class TaskList {
     this.taskArray = [];
     this.nextId = 1;
 
-    this.form = document.querySelector(".task-form");
+    this.form = document.querySelector(".task-form"); //
     this.input = document.querySelector(".task-input");
     this.template =
       document.querySelector(".task-template").content.firstElementChild;
@@ -59,7 +59,7 @@ class TaskList {
   }
 
   deleteTask(id) {
-    this.taskArray = taskArray.filter((task) => task.id !== id);
+    this.taskArray = this.taskArray.filter((task) => task.id !== id);
     console.log("An object was deleted");
     this.headerVisibility();
   }
