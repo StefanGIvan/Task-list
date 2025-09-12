@@ -20,6 +20,12 @@ class TaskList {
       widgetTemplate.content.firstElementChild.cloneNode(true);
     this.rootEl.appendChild(cloneWidgetTemplate);
 
+    //Select title for change content
+    const listTitle = this.rootEl.querySelector(".task-widget-title");
+    if (listTitle) {
+      listTitle.textContent = taskListId;
+    }
+
     //Check itemTemplate
     const itemTemplate = document.querySelector(".task-template");
     if (!itemTemplate) {
