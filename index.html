@@ -12,12 +12,15 @@
       href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" type="image/x-icon" href="/assets/taskListFavicon.svg" />
   </head>
 
   <body>
     <!--structura de pagina cu 2 col cu divs care in fiecare coloana sa se initializeze widgets, cu id care o sa fie cheia pt fiecare widget-->
-    <div id="cicimimi"></div>
-    <div id="peste-prajit"></div>
+    <div class="page">
+      <div id="groceryList"></div>
+      <div id="toDoList"></div>
+    </div>
     <template class="tasks-widget-template">
       <div class="task-widget">
         <h1 class="task-widget-title">Task List</h1>

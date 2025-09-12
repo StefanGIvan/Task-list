@@ -14,6 +14,26 @@ body {
   color: var(--black);
 }
 
+@media (max-width: 900px) {
+  .page {
+    flex-direction: column;
+  }
+}
+
+.page {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-evenly;
+}
+
+#left-col,
+#right-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .task-widget {
   width: 100%;
   max-width: none;

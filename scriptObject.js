@@ -1,28 +1,52 @@
 class TaskList {
   constructor(taskListId) {
-    if (!taskListId) {
-      console.error("taskListId is falsy");
-    } else {
-      console.log("Initializing TaskList");
+    //taskListId representing storageKey
+    this.storageKey = taskListId;
+    //Here we pass the element from DOM
+    this.rootEl = document.getElementById(taskListId);
+    if (!this.rootEl) {
+      console.error(`No element with id: "${taskListId}" found`);
     }
 
-    this.taskListId = taskListId;
+    //const widgetTemplate =  target widget template node, if falsy -> error
+    const widgetTemplate = document.querySelector(".tasks-widget-template");
+    if (!widgetTemplate) {
+      console.error("Widget template not found");
+      return;
+    }
+
+    //Clone widget template and add on screen in div
+    const cloneWidgetTemplate =
+      widgetTemplate.content.firstElementChild.cloneNode(true);
+    this.rootEl.appendChild(cloneWidgetTemplate);
+
+    //Check itemTemplate
+    const itemTemplate = document.querySelector(".task-template");
+    if (!itemTemplate) {
+      //de completat
+      console.error("task-template not found");
+      return;
+    }
+    //Take the first child of the itemTemplate
+    this.itemTemplateEl = itemTemplate.content.firstElementChild;
+
+    //Selecting the widget template elements from
+    this.form = this.rootEl.querySelector(".task-form");
+    this.input = this.rootEl.querySelector(".task-input");
+    this.ulist = this.rootEl.querySelector(".task-list");
+
+    //State
     this.taskArray = [];
     this.nextId = 1;
 
-    this.form = document.querySelector(".task-form"); //
-    this.input = document.querySelector(".task-input");
-    this.template =
-      document.querySelector(".task-template").content.firstElementChild;
-    this.ulist = document.querySelector(".task-list");
-
+    //Boot the App
     this.loadLocalStorage();
     this.formListener();
   }
 
   loadLocalStorage() {
-    const stored = localStorage.getItem(this.taskListId);
-    console.log("Got local storage item", this.taskListId);
+    const stored = localStorage.getItem(this.storageKey);
+    console.log("Got local storage item", this.storageKey);
 
     if (!stored) {
       console.log("stored was falsy");
@@ -54,18 +78,8 @@ class TaskList {
     this.headerVisibility();
   }
 
-  newTaskId() {
-    return this.nextId++;
-  }
-
-  deleteTask(id) {
-    this.taskArray = this.taskArray.filter((task) => task.id !== id);
-    console.log("An object was deleted");
-    this.headerVisibility();
-  }
-
   headerVisibility() {
-    const header = document.querySelector(".header-container");
+    const header = this.rootEl.querySelector(".header-container");
     if (!header) {
       console.log("header is falsy");
       return;
@@ -80,19 +94,41 @@ class TaskList {
     }
   }
 
-  persist() {
-    localStorage.setItem(this.taskListId, JSON.stringify(this.taskArray));
-    console.log("local storage was updated");
+  formListener() {
+    if (!this.form) {
+      return;
+    }
+    this.form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = this.input.value.trim();
+      if (!text) {
+        console.log("text is falsy: ", typeof text);
+        return;
+      }
+      this.appendTask(text);
+      this.input.value = "";
+    });
   }
 
-  handleDeleteTask(taskItem, li) {
-    this.deleteTask(taskItem);
+  appendTask(text) {
+    const task = {
+      id: this.newTaskId(),
+      title: text.trim(),
+      completed: false,
+    };
+
+    this.taskArray.push(task);
+    this.renderTask(task);
     this.persist();
-    li.remove();
+    this.headerVisibility();
+  }
+
+  newTaskId() {
+    return this.nextId++;
   }
 
   renderTask(task) {
-    const li = this.template.cloneNode(true);
+    const li = this.itemTemplateEl.cloneNode(true);
     li.dataset.id = task.id;
 
     const checkbox = li.querySelector(".task-checkbox");
@@ -104,7 +140,9 @@ class TaskList {
       );
       if (foundTask) {
         foundTask.completed = checkbox.checked;
-        console.log("Object nr.:" + foundTask.id + " completed");
+        console.log(
+          `Object nr.: ${foundTask.id} completed = ${foundTask.completed}`
+        );
       }
       this.persist();
     });
@@ -127,6 +165,9 @@ class TaskList {
         );
         if (foundTask) {
           foundTask.title = titleSpan.textContent.trim();
+          console.log("titleSpan was trimmed");
+        } else {
+          console.log("titleSpan was NOT trimmed");
         }
         titleSpan.removeEventListener("blur", finishedEditing);
         titleSpan.removeEventListener("keydown", onEnter);
@@ -146,31 +187,23 @@ class TaskList {
     this.headerVisibility();
   }
 
-  appendTask(text) {
-    const task = {
-      id: this.newTaskId(),
-      title: text.trim(),
-      completed: false,
-    };
+  persist() {
+    localStorage.setItem(this.storageKey, JSON.stringify(this.taskArray));
+    console.log("local storage was updated");
+  }
 
-    this.taskArray.push(task);
-    this.renderTask(task);
-    this.persist();
+  deleteTask(id) {
+    this.taskArray = this.taskArray.filter((task) => task.id !== id);
+    console.log("An object was deleted");
     this.headerVisibility();
   }
 
-  formListener() {
-    this.form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const text = this.input.value.trim();
-      if (!text) {
-        console.log("text is falsy: ", typeof text);
-        return;
-      }
-      this.appendTask(text);
-      this.input.value = "";
-    });
+  handleDeleteTask(taskItem, li) {
+    this.deleteTask(taskItem);
+    this.persist();
+    li.remove();
   }
 }
 
-new TaskList("taskArray");
+new TaskList("groceryList");
+new TaskList("toDoList");
