@@ -1,5 +1,7 @@
 :root {
   --gray: #383838;
+  --darkGray: #2b2b2b;
+  --lightGray: #cfcfcf;
   --black: #0b0b0d;
   --white: #fff;
   --blue: #009fdb;
@@ -14,10 +16,12 @@ body {
   color: var(--black);
 }
 
-@media (max-width: 900px) {
-  .page {
-    flex-direction: column;
-  }
+.app-title {
+  margin: 20px 0px;
+  font-size: 30px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--white);
 }
 
 .page {
@@ -102,7 +106,91 @@ body {
   box-shadow: 0 0 4px var(--blue);
 }
 
-.header-container {
+.empty-state {
+  margin: 0 0 16px;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--white);
+}
+
+.header-actions-container {
+  max-width: 80%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 15px;
+  padding-bottom: 0px;
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+  gap: 2px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  width: 100%;
+  background-color: var(--gray);
+}
+
+.bulk-text {
+  flex: 1 1 auto;
+  font-size: 20px;
+  padding: 0 70px;
+  font-weight: 700;
+  text-align: left;
+  color: var(--white);
+}
+
+.bulk-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.bulk-actions > .bulk-complete-btn {
+  /* select simplu*/
+  border: none;
+  outline: none;
+  background-color: var(--gray);
+}
+
+.bulk-complete-btn:hover {
+  background-color: var(--blue);
+  box-shadow: 0 0 4px 8px var(--blue);
+}
+
+.bulk-complete-icon {
+  height: 30px;
+  width: 30px;
+  display: block;
+  cursor: pointer;
+}
+
+.bulk-actions > .bulk-delete-btn {
+  border: none;
+  outline: none;
+  background-color: var(--gray);
+}
+
+.bulk-delete-btn:hover {
+  background-color: var(--blue);
+  box-shadow: 0 0 4px 8px var(--blue);
+}
+
+.bulk-delete-icon {
+  height: 30px;
+  width: 30px;
+  display: block;
+  cursor: pointer;
+}
+
+.header-title-container {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -115,11 +203,7 @@ body {
   color: var(--white);
 }
 
-.header-container-hidden {
-  display: none;
-}
-
-.taskArray-header {
+.header-title {
   display: flex;
   align-items: center;
   gap: 2px;
@@ -129,18 +213,18 @@ body {
   background-color: var(--gray);
 }
 
-.taskArray-header > .header-select {
+.header-title > .header-title-select {
   flex: 0 1 auto;
   font-size: 20px;
 }
 
-.taskArray-header > .header-title {
+.header-title > .header-title-text {
   flex: 1 0 auto;
   font-size: 20px;
   padding-left: 5px;
 }
 
-.taskArray-header > .header-actions {
+.header-title > .header-title-actions {
   flex: 0 0 auto;
   font-size: 20px;
   padding-right: 20px;
@@ -173,6 +257,20 @@ body {
   width: 100%;
   box-sizing: border-box;
   background-color: var(--gray);
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.task-item.completed .task-title {
+  text-decoration: line-through;
+  opacity: 0.7;
+  color: var(--lightGray);
+}
+.task-item.completed .task-title::after {
+  content: "🎉";
+  color: initial;
+  display: inline-block;
+  text-decoration: none;
+  opacity: 1;
 }
 
 .task-item > .task-checkbox {
@@ -238,4 +336,14 @@ body {
   width: 30px;
   display: block;
   cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .page {
+    flex-direction: column;
+  }
 }

@@ -16,14 +16,17 @@
   </head>
 
   <body>
-    <!--structura de pagina cu 2 col cu divs care in fiecare coloana sa se initializeze widgets, cu id care o sa fie cheia pt fiecare widget-->
+    <h1 class="app-title">Task List App</h1>
+    <!--structure of 2 pages with 2 col with divs which in every col you initialize widgets, with id which will be the key for every widget-->
     <div class="page">
       <div id="groceryList"></div>
       <div id="toDoList"></div>
     </div>
+
+    <!--Template for Tasks Widget-->
     <template class="tasks-widget-template">
       <div class="task-widget">
-        <h1 class="task-widget-title">Task List</h1>
+        <h2 class="task-widget-title">Task List</h2>
 
         <form class="task-form" autocomplete="off">
           <input
@@ -37,32 +40,59 @@
           </button>
         </form>
 
-        <div class="header-container header-container-hidden">
-          <div class="taskArray-header">
-            <span class="header-select">Select</span>
-            <span class="header-title">Task</span>
-            <span class="header-actions">Actions</span>
+        <!--When no tasks are on DOM-->
+        <div class="empty-state hidden">No tasks yet</div>
+
+        <!--Header for Bulk Actions-->
+        <div class="header-actions-container hidden">
+          <div class="header-actions">
+            <div class="bulk-text">Bulk Actions</div>
+            <div class="bulk-actions">
+              <button class="bulk-complete-btn" type="button">
+                <img
+                  src="assets/editCompletedButton.svg"
+                  alt="Complete Bulk"
+                  class="bulk-complete-icon"
+                />
+              </button>
+              <button class="bulk-delete-btn" type="button">
+                <img
+                  src="assets/bulkTrashcan.svg"
+                  alt="Delete Bulk"
+                  class="bulk-delete-icon"
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!--Header for naming actions-->
+        <div class="header-title-container hidden">
+          <div class="header-title">
+            <span class="header-title-select">Select</span>
+            <span class="header-title-text">Task</span>
+            <span class="header-title-actions">Actions</span>
           </div>
           <ul class="task-list" aria-live="polite"></ul>
         </div>
       </div>
     </template>
 
-    <!-- Hidden Task List Template -->
+    <!-- Template for Task List Widget -->
     <template class="task-template">
-      <li class="task-item">
+      <li class="task-item completed">
         <input type="checkbox" class="task-checkbox" />
         <span class="task-title"></span>
         <div class="task-actions">
+          <button class="task-edit-btn">
+            <img src="assets/pencil.svg" alt="Edit" class="task-edit-icon" />
+          </button>
           <button class="task-delete-btn">
             <img
               src="assets/trashcan.svg"
               alt="Delete"
               class="task-delete-icon"
             />
-          </button>
-          <button class="task-edit-btn">
-            <img src="assets/pencil.svg" alt="Edit" class="task-edit-icon" />
           </button>
         </div>
       </li>

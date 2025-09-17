@@ -2,7 +2,7 @@ const form = document.querySelector(".task-form");
 const input = document.querySelector(".task-input");
 const template =
   document.querySelector(".task-template").content.firstElementChild;
-const ulist = document.querySelector(".task-list");
+const ulList = document.querySelector(".task-list");
 
 let taskArray = [];
 let nextId = 1;
@@ -10,16 +10,16 @@ function newTaskId() {
   return nextId++;
 }
 
-function headerVisibility() {
-  const header = document.querySelector(".header-container");
-  if (!header) {
+function header-titleVisibility() {
+  const header-title = document.querySelector(".header-title-container");
+  if (!header-title) {
     return;
   }
 
   if (taskArray.length > 0) {
-    header.classList.remove("header-container-hidden");
+    header-title.classList.remove("header-title-container-hidden");
   } else {
-    header.classList.add("header-container-hidden");
+    header-title.classList.add("header-title-container-hidden");
   }
 }
 
@@ -69,8 +69,8 @@ function renderTask(task) {
     titleSpan.addEventListener("blur", finishedEditing);
     titleSpan.addEventListener("keydown", onEnter);
   });
-  ulist.appendChild(li);
-  headerVisibility();
+  ulList.appendChild(li);
+  header-titleVisibility();
 }
 
 function appendTask(text) {
@@ -85,7 +85,7 @@ function appendTask(text) {
 
 function deleteTask(id) {
   taskArray = taskArray.filter((task) => task.id !== id);
-  headerVisibility();
+  header-titleVisibility();
 }
 
 function persist() {
@@ -121,7 +121,7 @@ function loadLocalStorage() {
   } catch (err) {
     console.error("Could not parse taskArray from localStorage.");
   }
-  headerVisibility();
+  header-titleVisibility();
 }
 
 form.addEventListener("submit", (e) => {
