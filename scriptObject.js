@@ -103,19 +103,18 @@ class TaskList {
 
     this.bulkCompleteBtn = this.rootEl.querySelector(".bulk-complete-btn");
     if (this.bulkCompleteBtn) {
-      this.bulkCompleteBtn.addEventListener(
-        "click",
-        () => this.bulkCompleteSelected() //better naming
+      this.bulkCompleteBtn.addEventListener("click", () =>
+        this.bulkCompleteSelected()
       );
     }
 
     this.bulkDeleteBtn = this.rootEl.querySelector(".bulk-delete-btn");
     if (this.bulkDeleteBtn) {
-      this.bulkDeleteBtn.addEventListener(
-        "click",
-        () => this.bulkDeleteSelected() //better naming
+      this.bulkDeleteBtn.addEventListener("click", () =>
+        this.bulkDeleteSelected()
       );
     }
+
     //State
     this.taskArray = [];
 
@@ -207,7 +206,7 @@ class TaskList {
     const headerActions = this.rootEl.querySelector(
       ".header-actions-container"
     );
-    const emptyStateEl = this.rootEl.querySelector(".empty-state"); //element in nume, care e  elem si care e var; too much rendering-> console.logs() - de 2 ori ar trebui rendered
+    const emptyStateEl = this.rootEl.querySelector(".empty-state");
 
     //If elements are missing, return
     if (!emptyStateEl) {
@@ -253,10 +252,11 @@ class TaskList {
 
     const text = this.input.value.trim();
     if (!text) {
-      this.logger.log("text is false: ", typeof text);
+      this.logger.log(`${text} is false: , ${typeof text}`);
       return;
     }
 
+    //For the <select>
     const selectedOption =
       this.categorySelect.options[this.categorySelect.selectedIndex]; //take the index of the option selected
     const categoryValue = selectedOption.value || "low"; //value = "high" | "medium" | "low" and fallback "low" if not selected
@@ -277,7 +277,7 @@ class TaskList {
       checked: false,
       completed: false,
       createdAt: new Date().toISOString(), //create a date instance and convert to string in ISO format(lexicographically)
-      category: categoryValue, //store the value
+      categoryLevel: categoryValue, //store the value
       categoryLabel: categoryLabel, //store the label
     };
 
@@ -365,7 +365,9 @@ class TaskList {
 
   sortCategAsc() {
     this.taskArray.sort(
-      (a, b) => this.categoryOrder[a.category] - this.categoryOrder[b.category]
+      (a, b) =>
+        this.categoryOrder[a.categoryLevel] -
+        this.categoryOrder[b.categoryLevel]
     );
 
     //Update the UI
@@ -375,7 +377,9 @@ class TaskList {
 
   sortCategDesc() {
     this.taskArray.sort(
-      (a, b) => this.categoryOrder[b.category] - this.categoryOrder[a.category]
+      (a, b) =>
+        this.categoryOrder[b.categoryLevel] -
+        this.categoryOrder[a.categoryLevel]
     );
 
     //Update the UI
@@ -445,11 +449,11 @@ class TaskList {
     this.logger.log("bulk-delete-btn removed: " + removed + " tasks");
   }
 
-  //Handle the delete process -> delete from array, update local storage, remove li from DOM, update headers/empty-state
+  //Handle the delete process of a task -> delete from array, update local storage, remove li from DOM, update headers/empty-state
   handleDeleteTask(index, li) {
     this.deleteTask(index);
     this.persist();
-    li.remove();
+    li.remove(); //done like this because it's just for a single element, instead of calling render()
     this.headerVisibility();
   }
 }

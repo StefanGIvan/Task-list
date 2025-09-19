@@ -42,7 +42,7 @@ body {
 .task-widget {
   width: 100%;
   max-width: none;
-  margin: 40px auto 0;
+  margin: 40px auto 40px;
   padding: 0px;
 }
 
@@ -111,6 +111,22 @@ body {
   padding: 12px 14px;
   border-radius: 10px;
   background: var(--gray);
+  color: var(--lightGray);
+}
+
+.task-category:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 4px var(--blue);
+}
+
+/*For the options in the dropdown*/
+.task-category option {
+  color: var(--white);
+}
+
+/*When a real option is selected*/
+.task-category:has(option:checked:not([value=""])) {
   color: var(--white);
 }
 
@@ -152,9 +168,8 @@ body {
 .header-actions {
   display: flex;
   justify-content: flex-end;
-  padding: 10px;
+  padding: 12px;
   gap: 2px;
-  padding: 8px 12px;
   box-sizing: border-box;
   width: 100%;
   background-color: var(--gray);
@@ -306,9 +321,8 @@ body {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 10px;
+  padding: 12px;
   gap: 2px;
-  padding: 8px 12px;
   background-color: var(--gray);
 }
 
@@ -350,9 +364,8 @@ body {
 .task-item {
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: 15px;
   gap: 2px;
-  padding: 8px 12px;
   width: 100%;
   box-sizing: border-box;
   background-color: var(--gray);
