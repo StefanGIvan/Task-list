@@ -89,6 +89,31 @@ body {
   box-shadow: 0 0 4px var(--blue);
 }
 
+.task-category-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  max-width: 480px;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.text-category {
+  font-size: 18px;
+  color: var(--white);
+}
+
+.task-category {
+  max-width: 250px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--gray);
+  color: var(--white);
+}
+
 .task-add-btn {
   max-width: 200px;
   width: 50%;
@@ -137,11 +162,14 @@ body {
 
 .bulk-text {
   flex: 1 1 auto;
-  font-size: 20px;
-  padding: 0 70px;
+  font-size: 25px;
+  padding-right: 65px;
   font-weight: 700;
   text-align: left;
   color: var(--white);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  flex-wrap: nowrap; /*still wrapping - needs fix*/
 }
 
 .bulk-actions {
@@ -153,8 +181,79 @@ body {
   gap: 15px;
 }
 
-.bulk-actions > .bulk-complete-btn {
-  /* select simplu*/
+.categ-sort-asc {
+  border: none;
+  outline: none;
+  background-color: var(--gray);
+}
+
+.categ-sort-asc:hover {
+  background-color: var(--blue);
+  box-shadow: 0 0 4px 8px var(--blue);
+}
+
+.categ-sort-asc-icon {
+  height: 30px;
+  width: 30px;
+  display: block;
+  cursor: pointer;
+}
+
+.categ-sort-desc {
+  border: none;
+  outline: none;
+  background-color: var(--gray);
+}
+
+.categ-sort-desc:hover {
+  background-color: var(--blue);
+  box-shadow: 0 0 4px 8px var(--blue);
+}
+
+.categ-sort-desc-icon {
+  height: 30px;
+  width: 30px;
+  display: block;
+  cursor: pointer;
+}
+
+.date-sort-asc {
+  border: none;
+  outline: none;
+  background-color: var(--gray);
+}
+
+.date-sort-asc:hover {
+  background-color: var(--blue);
+  box-shadow: 0 0 4px 8px var(--blue);
+}
+
+.date-sort-asc-icon {
+  height: 30px;
+  width: 30px;
+  display: block;
+  cursor: pointer;
+}
+
+.date-sort-desc {
+  border: none;
+  outline: none;
+  background-color: var(--gray);
+}
+
+.date-sort-desc:hover {
+  background-color: var(--blue);
+  box-shadow: 0 0 4px 8px var(--blue);
+}
+
+.date-sort-desc-icon {
+  height: 30px;
+  width: 30px;
+  display: block;
+  cursor: pointer;
+}
+
+.bulk-complete-btn {
   border: none;
   outline: none;
   background-color: var(--gray);
@@ -172,7 +271,7 @@ body {
   cursor: pointer;
 }
 
-.bulk-actions > .bulk-delete-btn {
+.bulk-delete-btn {
   border: none;
   outline: none;
   background-color: var(--gray);
@@ -213,18 +312,18 @@ body {
   background-color: var(--gray);
 }
 
-.header-title > .header-title-select {
+.header-title-select {
   flex: 0 1 auto;
   font-size: 20px;
 }
 
-.header-title > .header-title-text {
+.header-title-text {
   flex: 1 0 auto;
   font-size: 20px;
   padding-left: 5px;
 }
 
-.header-title > .header-title-actions {
+.header-title-actions {
   flex: 0 0 auto;
   font-size: 20px;
   padding-right: 20px;
@@ -273,7 +372,7 @@ body {
   opacity: 1;
 }
 
-.task-item > .task-checkbox {
+.task-checkbox {
   flex: 0 0 auto;
   width: 18px;
   height: 18px;
@@ -283,7 +382,7 @@ body {
   box-shadow: 0 0 4px 1px var(--blue);
 }
 
-.task-item > .task-title {
+.task-title {
   flex: 1 1 auto;
   flex-wrap: wrap;
   min-width: 0;
@@ -293,7 +392,7 @@ body {
   padding: 0 40px;
 }
 
-.task-item > .task-actions {
+.task-actions {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;

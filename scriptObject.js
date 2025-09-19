@@ -39,7 +39,7 @@ class TaskList {
       this.logger.error(`No element with id: "${taskListId}" found`);
     }
 
-    //const widgetTemplate =  target widget template node, if falsy -> error
+    //Target widget template node, if false -> error
     const widgetTemplate = document.querySelector(".tasks-widget-template");
     if (!widgetTemplate) {
       this.logger.error("Widget template not found");
@@ -74,17 +74,46 @@ class TaskList {
       this.form.addEventListener("submit", (event) => this.formListener(event));
     }
 
-    this.bulkCompleteBtn = this.rootEl.querySelector(".bulk-complete-btn");
-    if (this.bulkCompleteBtn) {
-      this.bulkCompleteBtn.addEventListener("click", () =>
-        this.bulkCompleteSelected()
+    //Selecting the Task List Actions Category Buttons
+    this.categorySelect = this.rootEl.querySelector(".task-category"); //for the <select>
+    this.categoryOrder = { high: 2, medium: 1, low: 0 }; //map the labels to the numbers so we can sort by category
+
+    this.categorySortAsc = this.rootEl.querySelector(".categ-sort-asc"); //select the sort by categ asc btn
+    if (this.categorySortAsc) {
+      this.categorySortAsc.addEventListener("click", () => this.sortCategAsc());
+    }
+
+    this.categorySortDesc = this.rootEl.querySelector(".categ-sort-desc"); //select the sort by categ desc btn
+    if (this.categorySortDesc) {
+      this.categorySortDesc.addEventListener("click", () =>
+        this.sortCategDesc()
       );
     }
-    //Select the bulk-delete-btn element and add event listener to it
+
+    //Selecting the Task List Actions Date Buttons
+    this.dateSortAscBtn = this.rootEl.querySelector(".date-sort-asc");
+    if (this.dateSortAscBtn) {
+      this.dateSortAscBtn.addEventListener("click", () => this.sortDateAsc());
+    }
+
+    this.dateSortDescBtn = this.rootEl.querySelector(".date-sort-desc");
+    if (this.dateSortDescBtn) {
+      this.dateSortDescBtn.addEventListener("click", () => this.sortDateDesc());
+    }
+
+    this.bulkCompleteBtn = this.rootEl.querySelector(".bulk-complete-btn");
+    if (this.bulkCompleteBtn) {
+      this.bulkCompleteBtn.addEventListener(
+        "click",
+        () => this.bulkCompleteSelected() //better naming
+      );
+    }
+
     this.bulkDeleteBtn = this.rootEl.querySelector(".bulk-delete-btn");
     if (this.bulkDeleteBtn) {
-      this.bulkDeleteBtn.addEventListener("click", () =>
-        this.bulkDeleteSelected()
+      this.bulkDeleteBtn.addEventListener(
+        "click",
+        () => this.bulkDeleteSelected() //better naming
       );
     }
     //State
@@ -103,20 +132,54 @@ class TaskList {
 
     if (!stored) {
       this.logger.log("stored was falsy");
-      //make sure that the array is really empty so no previous tasks could appear
-      this.taskArray = [];
-      //UI still needs update
-      this.render();
+
+      this.taskArray = []; //make sure that the array is really empty so no previous tasks could appear
+      this.render(); //UI still needs update
+
       return;
     }
 
     try {
       const parsed = JSON.parse(stored);
 
-      //verify the local storage for it being an array better
+      //Verify each task of local storage if it's falsy itself or for falsy properties
       if (Array.isArray(parsed)) {
-        this.taskArray = parsed;
-        this.logger.log("taskArray was loaded with the parsed version");
+        const validTasks = parsed.filter((task, index) => {
+          //Verify is task is an object
+          if (!task || typeof task !== "object") {
+            this.logger.error(`Task nr. ${index} is not an object`, task);
+            return false;
+          }
+
+          if (typeof task.title !== "string") {
+            this.logger.error(
+              `${task.title} property of task nr. ${index} is not a string`,
+              task
+            );
+            return false;
+          }
+
+          if (typeof task.checked !== "boolean") {
+            this.logger.error(
+              `${task.checked} property of task nr. ${index} is not an boolean`,
+              task
+            );
+            return false;
+          }
+
+          if (typeof task.completed !== "boolean") {
+            this.logger.error(
+              `${task.completed} property of task nr. ${index} is not an boolean`,
+              task
+            );
+            return false;
+          }
+          return true;
+        });
+        this.taskArray = validTasks;
+        this.logger.log(
+          "taskArray was loaded with the parsed & filtered version"
+        );
       }
     } catch (err) {
       this.logger.error("Could not parse taskArray from localStorage.");
@@ -129,7 +192,7 @@ class TaskList {
   //Render each task
   //Update header/empty-state visibility
   render() {
-    this.ulList.innerHTML = ""; //wipe out HTML inside the list to not get duplicates
+    this.ulList.innerHTML = ""; //removing every single child element inside <ul> to not get duplicates
     this.taskArray.forEach((task) => this.renderTask(task));
     this.logger.log("All tasks rendered succesfully");
 
@@ -187,22 +250,35 @@ class TaskList {
   //If a task is added -> prevent page refresh, trim for white spaces, verify text existance, append tasks and clear input
   formListener(event) {
     event.preventDefault();
+
     const text = this.input.value.trim();
     if (!text) {
-      this.logger.log("text is falsy: ", typeof text);
+      this.logger.log("text is false: ", typeof text);
       return;
     }
-    this.appendTask(text);
+
+    const selectedOption =
+      this.categorySelect.options[this.categorySelect.selectedIndex]; //take the index of the option selected
+    const categoryValue = selectedOption.value || "low"; //value = "high" | "medium" | "low" and fallback "low" if not selected
+    const categoryLabel = selectedOption.value
+      ? selectedOption.text
+      : "Not important"; //if the text selected has a value, retain the text, else retain "Not important"
+
+    this.appendTask(text, categoryValue, categoryLabel);
     this.input.value = "";
+    this.categorySelect.selectedIndex = 0; //back to placeholder ""
   }
 
   //Define task and trim text
   //Push task to array, render it to DOM, update localStorage, update header visibility
-  appendTask(text) {
+  appendTask(text, categoryValue, categoryLabel) {
     const task = {
       title: text.trim(),
       checked: false,
       completed: false,
+      createdAt: new Date().toISOString(), //create a date instance and convert to string in ISO format(lexicographically)
+      category: categoryValue, //store the value
+      categoryLabel: categoryLabel, //store the label
     };
 
     this.taskArray.push(task);
@@ -215,7 +291,6 @@ class TaskList {
   //Attach event listeners for checkbox
   //Update DOM elements with the array fields, delete and edit button
   //Update the local storage when check, delete and edit
-  //
   renderTask(task) {
     const li = this.itemTemplateEl.cloneNode(true);
 
@@ -232,7 +307,8 @@ class TaskList {
     });
 
     const titleSpan = li.querySelector(".task-title");
-    titleSpan.textContent = task.title;
+    const titleLabel = task.categoryLabel;
+    titleSpan.textContent = `${task.title} (${titleLabel})`; //show the label(the importance level) also
 
     const delBtn = li.querySelector(".task-delete-btn");
     delBtn.addEventListener("click", () => {
@@ -271,7 +347,7 @@ class TaskList {
       titleSpan.addEventListener("blur", finishedEditing);
       titleSpan.addEventListener("keydown", onEnter);
     });
-    li.classList.toggle("completed", task.completed);
+    li.classList.toggle("completed", task.completed); //make the DOM match the object property
     this.ulList.appendChild(li);
   }
 
@@ -287,7 +363,53 @@ class TaskList {
     this.logger.log("Task at index: ", index, "was deleted");
   }
 
-  //assign a new array to not delete the tasks from the current one
+  sortCategAsc() {
+    this.taskArray.sort(
+      (a, b) => this.categoryOrder[a.category] - this.categoryOrder[b.category]
+    );
+
+    //Update the UI
+    this.persist();
+    this.render();
+  }
+
+  sortCategDesc() {
+    this.taskArray.sort(
+      (a, b) => this.categoryOrder[b.category] - this.categoryOrder[a.category]
+    );
+
+    //Update the UI
+    this.persist();
+    this.render();
+  }
+
+  //Sort the array in ascending order and reflect on DOM
+  sortDateAsc() {
+    this.taskArray.sort(
+      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+    ); //if a is smaller than b, a remains in place
+
+    //Update the local storage and UI
+    this.persist();
+    this.render();
+
+    this.logger.log("Tasks sorted ascending by date");
+  }
+
+  //Sort the array in descending order and reflect on DOM
+  sortDateDesc() {
+    this.taskArray.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    ); //if b is greater, b swaps with a
+
+    //Update the local storage and UI
+    this.persist();
+    this.render();
+
+    this.logger.log("Tasks sorted descending by date");
+  }
+
+  //Assign a new array to not delete the tasks from the current one and refelct on DOM
   bulkCompleteSelected() {
     let completedTasks = 0;
 
@@ -307,8 +429,8 @@ class TaskList {
     );
   }
 
-  //filter the array and delete all tasks that are completed from it
-  //update local storage and update UI
+  //Filter the array and delete all tasks that are completed from it
+  //Update local storage and update UI
   bulkDeleteSelected() {
     const before = this.taskArray.length;
 

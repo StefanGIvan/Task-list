@@ -35,6 +35,19 @@
             placeholder="Write a task..."
             aria-label="Write a new task"
           />
+          <div class="task-category-container">
+            <p class="text-category">
+              Select the importance of the task (optional)
+            </p>
+            <select class="task-category">
+              <option value="" disabled selected hidden>
+                Select importance of task...
+              </option>
+              <option value="high">Important</option>
+              <option value="medium">Slightly important</option>
+              <option value="low">Not important</option>
+            </select>
+          </div>
           <button class="task-add-btn" type="submit" aria-label="Add">
             Add
           </button>
@@ -46,8 +59,38 @@
         <!--Header for Bulk Actions-->
         <div class="header-actions-container hidden">
           <div class="header-actions">
-            <div class="bulk-text">Bulk Actions</div>
+            <div class="bulk-text">Task List Tools</div>
             <div class="bulk-actions">
+              <button class="categ-sort-asc">
+                <img
+                  src="/assets/categorySortAsc.svg"
+                  alt="Category Sort"
+                  class="categ-sort-asc-icon"
+                />
+              </button>
+              <button class="categ-sort-desc">
+                <img
+                  src="/assets/categorySortDesc.svg"
+                  alt="Category Sort"
+                  class="categ-sort-desc-icon"
+                />
+              </button>
+
+              <button class="date-sort-asc" type="button">
+                <img
+                  src="/assets/dateAscendingSort.svg"
+                  alt="Ascending Sort"
+                  class="date-sort-asc-icon"
+                />
+              </button>
+              <button class="date-sort-desc" type="button">
+                <img
+                  src="/assets/dateDescendingSort.svg"
+                  alt="Descending Sort"
+                  class="date-sort-desc-icon"
+                />
+              </button>
+
               <button class="bulk-complete-btn" type="button">
                 <img
                   src="assets/editCompletedButton.svg"
@@ -55,6 +98,7 @@
                   class="bulk-complete-icon"
                 />
               </button>
+
               <button class="bulk-delete-btn" type="button">
                 <img
                   src="assets/bulkTrashcan.svg"
@@ -66,7 +110,7 @@
           </div>
         </div>
 
-        <!--Header for naming actions-->
+        <!--Header for the titles of the table-->
         <div class="header-title-container hidden">
           <div class="header-title">
             <span class="header-title-select">Select</span>
