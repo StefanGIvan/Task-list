@@ -36,16 +36,12 @@
             aria-label="Write a new task"
           />
           <div class="task-category-container">
-            <p class="text-category">
-              Select the importance of the task (optional)
-            </p>
+            <p class="text-category">Select the importance of the task</p>
             <select class="task-category">
-              <option value="" disabled selected hidden>
-                Select importance of task...
-              </option>
-              <option value="high">Important</option>
+              <!--Default option-->
+              <option value="low" selected>Not important</option>
               <option value="medium">Slightly important</option>
-              <option value="low">Not important</option>
+              <option value="high">Important</option>
             </select>
           </div>
           <button class="task-add-btn" type="submit" aria-label="Add">
@@ -54,82 +50,88 @@
         </form>
 
         <!--When no tasks are on DOM-->
-        <div class="empty-state hidden">No tasks yet</div>
+        <div class="empty-state">No tasks yet</div>
 
-        <!--Header for Bulk Actions-->
-        <div class="header-actions-container hidden">
+        <!--Header for Actions & Bulk Actions-->
+        <div class="header-actions-container">
           <div class="header-actions">
             <div class="bulk-text">Task List Tools</div>
-            <div class="bulk-actions">
-              <button
-                class="categ-sort-asc"
-                title="Sort by ascending category"
-                type="button"
-              >
-                <img
-                  src="/assets/categorySortAsc.svg"
-                  alt="Category Sort"
-                  class="categ-sort-asc-icon"
-                />
-              </button>
-              <button
-                class="categ-sort-desc"
-                title="Sort by descending category"
-                type="button"
-              >
-                <img
-                  src="/assets/categorySortDesc.svg"
-                  alt="Category Sort"
-                  class="categ-sort-desc-icon"
-                />
-              </button>
+            <div class="task-list-tools">
+              <!--Div for Sort actions-->
+              <div class="sort-actions">
+                <button
+                  class="categ-sort-asc"
+                  title="Sort by ascending category"
+                  type="button"
+                >
+                  <img
+                    src="/assets/categorySortAsc.svg"
+                    alt="Category Sort"
+                    class="categ-sort-asc-icon"
+                  />
+                </button>
+                <button
+                  class="categ-sort-desc"
+                  title="Sort by descending category"
+                  type="button"
+                >
+                  <img
+                    src="/assets/categorySortDesc.svg"
+                    alt="Category Sort"
+                    class="categ-sort-desc-icon"
+                  />
+                </button>
 
-              <button
-                class="date-sort-asc"
-                title="Sort by ascending date"
-                type="button"
-              >
-                <img
-                  src="/assets/dateAscendingSort.svg"
-                  alt="Ascending Sort"
-                  class="date-sort-asc-icon"
-                />
-              </button>
-              <button
-                class="date-sort-desc"
-                title="Sort by descending date"
-                type="button"
-              >
-                <img
-                  src="/assets/dateDescendingSort.svg"
-                  alt="Descending Sort"
-                  class="date-sort-desc-icon"
-                />
-              </button>
+                <button
+                  class="date-sort-asc"
+                  title="Sort by ascending date"
+                  type="button"
+                >
+                  <img
+                    src="/assets/dateAscendingSort.svg"
+                    alt="Ascending Sort"
+                    class="date-sort-asc-icon"
+                  />
+                </button>
+                <button
+                  class="date-sort-desc"
+                  title="Sort by descending date"
+                  type="button"
+                >
+                  <img
+                    src="/assets/dateDescendingSort.svg"
+                    alt="Descending Sort"
+                    class="date-sort-desc-icon"
+                  />
+                </button>
+              </div>
 
-              <button
-                class="bulk-complete-btn"
-                title="Mark the selected tasks as completed"
-                type="button"
-              >
-                <img
-                  src="assets/editCompletedButton.svg"
-                  alt="Complete Bulk"
-                  class="bulk-complete-icon"
-                />
-              </button>
+              <!--Div for Bulk actions-->
+              <div class="bulk-actions">
+                <button
+                  class="bulk-complete-btn"
+                  title="Mark the selected tasks as completed"
+                  type="button"
+                >
+                  <img
+                    src="assets/editCompletedButton.svg"
+                    alt="Complete Bulk"
+                    class="bulk-complete-icon"
+                  />
+                </button>
 
-              <button
-                class="bulk-delete-btn"
-                title="Delete selected tasks"
-                type="button"
-              >
-                <img
-                  src="assets/bulkTrashcan.svg"
-                  alt="Delete Bulk"
-                  class="bulk-delete-icon"
-                />
-              </button>
+                <button
+                  class="bulk-delete-btn"
+                  title="Delete selected tasks"
+                  type="button"
+                >
+                  <img
+                    src="assets/bulkTrashcan.svg"
+                    alt="Delete Bulk"
+                    class="bulk-delete-icon"
+                  />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -148,7 +150,7 @@
 
     <!-- Template for Task List Widget -->
     <template class="task-template">
-      <li class="task-item completed">
+      <li class="task-item">
         <input type="checkbox" class="task-checkbox" />
         <span class="task-title"></span>
         <div class="task-actions">

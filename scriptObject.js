@@ -66,7 +66,7 @@ class TaskList {
     //Take the first child of the itemTemplate
     this.itemTemplateEl = itemTemplate.content.firstElementChild;
 
-    //Selecting the widget template elements from
+    //Selecting the widget template elements
     this.input = this.rootEl.querySelector(".task-input");
     this.ulList = this.rootEl.querySelector(".task-list");
     this.form = this.rootEl.querySelector(".task-form");
@@ -74,33 +74,29 @@ class TaskList {
       this.form.addEventListener("submit", (event) => this.formListener(event));
     }
 
-    //Selecting the Task List Actions Category Buttons
-    this.categorySelect = this.rootEl.querySelector(".task-category"); //for the <select>
-    this.categoryOrder = { high: 2, medium: 1, low: 0 }; //map the labels to the numbers so we can sort by category
-
-    this.categorySortAsc = this.rootEl.querySelector(".categ-sort-asc"); //select the sort by categ asc btn
-    if (this.categorySortAsc) {
-      this.categorySortAsc.addEventListener("click", () => this.sortCategAsc());
-    }
-
-    this.categorySortDesc = this.rootEl.querySelector(".categ-sort-desc"); //select the sort by categ desc btn
-    if (this.categorySortDesc) {
-      this.categorySortDesc.addEventListener("click", () =>
-        this.sortCategDesc()
+    //Select the Sort Group
+    this.sortGroup = this.rootEl.querySelector(".sort-actions");
+    if (this.sortGroup) {
+      this.sortGroup.addEventListener("click", (event) =>
+        this.stateToggleSort(event)
       );
     }
 
+    //Selecting selector and mapping its labels
+    this.categorySelect = this.rootEl.querySelector(".task-category"); //for the <select>
+    this.categoryOrder = { high: 2, medium: 1, low: 0 }; //map the labels to the numbers so we can sort by category
+
+    //Selecting the Task List Actions Category Buttons
+    this.categorySortAsc = this.rootEl.querySelector(".categ-sort-asc");
+
+    this.categorySortDesc = this.rootEl.querySelector(".categ-sort-desc");
+
     //Selecting the Task List Actions Date Buttons
     this.dateSortAscBtn = this.rootEl.querySelector(".date-sort-asc");
-    if (this.dateSortAscBtn) {
-      this.dateSortAscBtn.addEventListener("click", () => this.sortDateAsc());
-    }
 
     this.dateSortDescBtn = this.rootEl.querySelector(".date-sort-desc");
-    if (this.dateSortDescBtn) {
-      this.dateSortDescBtn.addEventListener("click", () => this.sortDateDesc());
-    }
 
+    //Selecting the Task List Bulk Actions Buttons
     this.bulkCompleteBtn = this.rootEl.querySelector(".bulk-complete-btn");
     if (this.bulkCompleteBtn) {
       this.bulkCompleteBtn.addEventListener("click", () =>
@@ -259,10 +255,8 @@ class TaskList {
     //For the <select>
     const selectedOption =
       this.categorySelect.options[this.categorySelect.selectedIndex]; //take the index of the option selected
-    const categoryValue = selectedOption.value || "low"; //value = "high" | "medium" | "low" and fallback "low" if not selected
-    const categoryLabel = selectedOption.value
-      ? selectedOption.text
-      : "Not important"; //if the text selected has a value, retain the text, else retain "Not important"
+    const categoryValue = selectedOption.value; //value = "high" | "medium" | "low"
+    const categoryLabel = selectedOption.text; //retain the text
 
     this.appendTask(text, categoryValue, categoryLabel);
     this.input.value = "";
@@ -317,11 +311,23 @@ class TaskList {
     });
 
     const editBtn = li.querySelector(".task-edit-btn");
-    editBtn.addEventListener("click", () => {
+    editBtn.addEventListener("click", (event) => {
+      if (task.completed) {
+        return;
+      }
+
+      const btn = event.currentTarget; //target btn if img is clicked
+      if (!btn) {
+        this.logger.error("Edit button is false in renderTask()");
+      }
+      btn.classList.add("active");
+
       titleSpan.contentEditable = true;
       titleSpan.focus();
 
       const finishedEditing = () => {
+        btn.classList.remove("active");
+
         titleSpan.contentEditable = false;
         const index = this.taskArray.indexOf(task);
 
@@ -347,7 +353,12 @@ class TaskList {
       titleSpan.addEventListener("blur", finishedEditing);
       titleSpan.addEventListener("keydown", onEnter);
     });
-    li.classList.toggle("completed", task.completed); //make the DOM match the object property
+
+    //These should apply whenever we render, so best place is here
+    li.classList.toggle("completed", task.completed); //make the DOM match the object property(BulkCompleteSelected())
+    editBtn.classList.toggle("low-opacity", task.completed); //add styling
+    editBtn.disabled = task.completed; //a boolean that helps disable "on/off"
+
     this.ulList.appendChild(li);
   }
 
@@ -361,6 +372,34 @@ class TaskList {
   deleteTask(index) {
     this.taskArray.splice(index, 1);
     this.logger.log("Task at index: ", index, "was deleted");
+  }
+
+  stateToggleSort(event) {
+    const btn = event.target.closest("button"); //in case the click is on the img
+
+    if (!btn || !this.sortGroup.contains(btn)) {
+      this.logger.error("No btn was found in stateToggleSort()");
+      return;
+    }
+
+    //Remove all active class from the buttons of sortGroup
+    this.sortGroup.querySelectorAll("button").forEach((sortBtn) => {
+      sortBtn.classList.remove("active");
+    });
+
+    //Set active only the clicked button
+    btn.classList.add("active");
+
+    //Decide which button was clicked and do its sort
+    if (btn.classList.contains("categ-sort-asc")) {
+      this.sortCategAsc();
+    } else if (btn.classList.contains("categ-sort-desc")) {
+      this.sortCategDesc();
+    } else if (btn.classList.contains("date-sort-asc")) {
+      this.sortDateAsc();
+    } else if (btn.classList.contains("date-sort-desc")) {
+      this.sortDateDesc();
+    }
   }
 
   sortCategAsc() {
@@ -438,7 +477,7 @@ class TaskList {
   bulkDeleteSelected() {
     const before = this.taskArray.length;
 
-    this.taskArray = this.taskArray.filter((task) => !task.checked);
+    this.taskArray = this.taskArray.filter((task) => !task.checked); //create a list of ids that you want to delete
 
     const removed = before - this.taskArray.length;
 
