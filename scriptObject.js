@@ -74,6 +74,9 @@ class TaskList {
       this.form.addEventListener("submit", (event) => this.formListener(event));
     }
 
+    this.currentSortKey = `${this.storageKey}:sort`; //key for the sort mode (unique per widget)
+    this.currentSort = localStorage.getItem(this.currentSortKey); //take current sort key from local storage
+
     //Select the Sort Group
     this.sortGroup = this.rootEl.querySelector(".sort-actions");
     if (this.sortGroup) {
@@ -126,7 +129,7 @@ class TaskList {
     this.logger.log("Got local storage item", this.storageKey);
 
     if (!stored) {
-      this.logger.log("stored was falsy");
+      this.logger.log("stored was false");
 
       this.taskArray = []; //make sure that the array is really empty so no previous tasks could appear
       this.render(); //UI still needs update
@@ -180,6 +183,8 @@ class TaskList {
       this.logger.error("Could not parse taskArray from localStorage.");
     }
 
+    this.syncSortButtonsUI();
+    this.applyCurrentSort();
     this.render();
   }
 
@@ -276,9 +281,67 @@ class TaskList {
     };
 
     this.taskArray.push(task);
-    this.renderTask(task);
+    this.applyCurrentSort();
+
+    this.render(task);
     this.persist();
+
     this.headerVisibility();
+  }
+
+  //Function to decide which sort should be applied after a new task has been added/page refresh
+  applyCurrentSort() {
+    switch (this.currentSort) {
+      case "cat-asc": {
+        this.sortCategAsc();
+        break;
+      }
+
+      case "cat-desc": {
+        this.sortCategDesc();
+        break;
+      }
+
+      case "date-asc": {
+        this.sortDateAsc();
+        break;
+      }
+
+      case "date-desc": {
+        this.sortDateDesc();
+        break;
+      }
+    }
+  }
+
+  //Helper for stateToggleSort() - Keeping sortGroup btn state active when a refresh happens
+  syncSortButtonsUI() {
+    if (!this.sortGroup) {
+      this.logger.log("sortGroup is false");
+      return;
+    }
+
+    this.sortGroup
+      .querySelectorAll("button")
+      .forEach((btn) => btn.classList.remove("active"));
+
+    const map = {
+      "cat-asc": ".categ-sort-asc",
+      "cat-desc": ".categ-sort-desc",
+      "date-asc": ".date-sort-asc",
+      "date-desc": ".date-sort-desc",
+    };
+
+    const selector = map[this.currentSort];
+    if (selector) {
+      const btn = this.sortGroup.querySelector(selector);
+
+      if (btn) {
+        btn.classList.add("active");
+      } else {
+        this.logger.error("btn is false in syncSortButtonsUI()");
+      }
+    }
   }
 
   //Clone list
@@ -301,8 +364,10 @@ class TaskList {
     });
 
     const titleSpan = li.querySelector(".task-title");
-    const titleLabel = task.categoryLabel;
-    titleSpan.textContent = `${task.title} (${titleLabel})`; //show the label(the importance level) also
+    const labelSpan = li.querySelector(".task-label");
+
+    titleSpan.textContent = task.title;
+    labelSpan.textContent = task.categoryLabel;
 
     const delBtn = li.querySelector(".task-delete-btn");
     delBtn.addEventListener("click", () => {
@@ -357,6 +422,7 @@ class TaskList {
     //These should apply whenever we render, so best place is here
     li.classList.toggle("completed", task.completed); //make the DOM match the object property(BulkCompleteSelected())
     editBtn.classList.toggle("low-opacity", task.completed); //add styling
+    labelSpan.classList.toggle("low-opacity", task.completed);
     editBtn.disabled = task.completed; //a boolean that helps disable "on/off"
 
     this.ulList.appendChild(li);
@@ -382,24 +448,24 @@ class TaskList {
       return;
     }
 
-    //Remove all active class from the buttons of sortGroup
-    this.sortGroup.querySelectorAll("button").forEach((sortBtn) => {
-      sortBtn.classList.remove("active");
-    });
-
-    //Set active only the clicked button
-    btn.classList.add("active");
-
-    //Decide which button was clicked and do its sort
+    //Decide which button was clicked and remember current sort
     if (btn.classList.contains("categ-sort-asc")) {
-      this.sortCategAsc();
+      this.currentSort = "cat-asc";
     } else if (btn.classList.contains("categ-sort-desc")) {
-      this.sortCategDesc();
+      this.currentSort = "cat-desc";
     } else if (btn.classList.contains("date-sort-asc")) {
-      this.sortDateAsc();
+      this.currentSort = "date-asc";
     } else if (btn.classList.contains("date-sort-desc")) {
-      this.sortDateDesc();
+      this.currentSort = "date-desc";
     }
+
+    //remember the current sort by storing in local storage
+    localStorage.setItem(this.currentSortKey, this.currentSort);
+
+    this.syncSortButtonsUI();
+    this.applyCurrentSort();
+    this.render();
+    this.persist();
   }
 
   sortCategAsc() {
@@ -408,10 +474,6 @@ class TaskList {
         this.categoryOrder[a.categoryLevel] -
         this.categoryOrder[b.categoryLevel]
     );
-
-    //Update the UI
-    this.persist();
-    this.render();
   }
 
   sortCategDesc() {
@@ -420,36 +482,20 @@ class TaskList {
         this.categoryOrder[b.categoryLevel] -
         this.categoryOrder[a.categoryLevel]
     );
-
-    //Update the UI
-    this.persist();
-    this.render();
   }
 
   //Sort the array in ascending order and reflect on DOM
   sortDateAsc() {
     this.taskArray.sort(
       (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-    ); //if a is smaller than b, a remains in place
-
-    //Update the local storage and UI
-    this.persist();
-    this.render();
-
-    this.logger.log("Tasks sorted ascending by date");
+    );
   }
 
   //Sort the array in descending order and reflect on DOM
   sortDateDesc() {
     this.taskArray.sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    ); //if b is greater, b swaps with a
-
-    //Update the local storage and UI
-    this.persist();
-    this.render();
-
-    this.logger.log("Tasks sorted descending by date");
+    );
   }
 
   //Assign a new array to not delete the tasks from the current one and refelct on DOM

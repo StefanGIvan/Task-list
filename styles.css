@@ -360,6 +360,12 @@ body {
   padding-left: 5px;
 }
 
+.header-title-category {
+  flex: 0 0 auto;
+  font-size: 20px;
+  padding-right: 20px;
+}
+
 .header-title-actions {
   flex: 0 0 auto;
   font-size: 20px;
@@ -388,11 +394,40 @@ body {
   display: flex;
   align-items: center;
   padding: 15px;
-  gap: 2px;
+  gap: 8px;
   width: 100%;
   box-sizing: border-box;
   background-color: var(--lightGray);
   transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.task-checkbox {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.task-checkbox:hover {
+  box-shadow: 0 0 4px 1px var(--blue);
+}
+
+.task-text {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 8px;
+  padding: 0 20px;
+}
+
+.task-title {
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 20px;
 }
 
 .task-item.completed .task-title {
@@ -408,24 +443,12 @@ body {
   opacity: 1;
 }
 
-.task-checkbox {
+.task-label {
   flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
-}
-
-.task-checkbox:hover {
-  box-shadow: 0 0 4px 1px var(--blue);
-}
-
-.task-title {
-  flex: 1 1 auto;
-  flex-wrap: wrap;
   min-width: 0;
-  white-space: normal;
+  white-space: nowrap;
   overflow-wrap: anywhere;
   font-size: 20px;
-  padding: 0 40px;
 }
 
 .task-actions {
@@ -434,6 +457,7 @@ body {
   flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
+  flex: 0 0 auto;
   gap: 15px;
 }
 
