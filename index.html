@@ -57,54 +57,21 @@
           <div class="header-actions">
             <div class="bulk-text">Task List Tools</div>
             <div class="task-list-tools">
-              <!--Div for Sort actions-->
-              <div class="sort-actions">
-                <button
-                  class="categ-sort-asc"
-                  title="Sort by ascending category"
-                  type="button"
-                >
-                  <img
-                    src="/assets/categorySortAsc.svg"
-                    alt="Category Sort"
-                    class="categ-sort-asc-icon"
-                  />
-                </button>
-                <button
-                  class="categ-sort-desc"
-                  title="Sort by descending category"
-                  type="button"
-                >
-                  <img
-                    src="/assets/categorySortDesc.svg"
-                    alt="Category Sort"
-                    class="categ-sort-desc-icon"
-                  />
-                </button>
+              <!--Select for Sort actions-->
+              <select class="sort-actions">
+                <option value="cat-asc">Sort by ascending category</option>
+                <option value="cat-desc">Sort by descending category</option>
+                <option value="date-asc">Sort by ascending date</option>
+                <option value="date-desc">Sort by descending date</option>
+              </select>
 
-                <button
-                  class="date-sort-asc"
-                  title="Sort by ascending date"
-                  type="button"
-                >
-                  <img
-                    src="/assets/dateAscendingSort.svg"
-                    alt="Ascending Sort"
-                    class="date-sort-asc-icon"
-                  />
-                </button>
-                <button
-                  class="date-sort-desc"
-                  title="Sort by descending date"
-                  type="button"
-                >
-                  <img
-                    src="/assets/dateDescendingSort.svg"
-                    alt="Descending Sort"
-                    class="date-sort-desc-icon"
-                  />
-                </button>
-              </div>
+              <!--Select by certain category-->
+              <select class="select-category">
+                <option value="">All</option>
+                <option value="high">Important</option>
+                <option value="medium">Slightly important</option>
+                <option value="low">Not important</option>
+              </select>
 
               <!--Div for Bulk actions-->
               <div class="bulk-actions">
@@ -137,7 +104,7 @@
         </div>
 
         <!--Header for the titles of the table-->
-        <div class="header-title-container hidden">
+        <div class="header-title-container">
           <div class="header-title">
             <span class="header-title-select">Select</span>
             <span class="header-title-text">Task</span>
@@ -152,11 +119,22 @@
     <!-- Template for Task List Widget -->
     <template class="task-template">
       <li class="task-item">
+        <!--First row for task-->
         <input type="checkbox" class="task-checkbox" />
+
         <div class="task-text">
           <span class="task-title"></span>
+          <!--Add a subtask-->
+          <button class="add-subtask-btn" type="button">
+            <img
+              src="/assets/addButton.svg"
+              alt="Add subtask"
+              class="add-subtask-icon"
+            />
+          </button>
           <span class="task-label"></span>
         </div>
+
         <div class="task-actions">
           <button class="task-edit-btn" title="Edit this task" type="button">
             <img src="assets/pencil.svg" alt="Edit" class="task-edit-icon" />
@@ -173,6 +151,7 @@
             />
           </button>
         </div>
+        <!--Second row for subtask-->
       </li>
     </template>
 

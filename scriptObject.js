@@ -74,30 +74,32 @@ class TaskList {
       this.form.addEventListener("submit", (event) => this.formListener(event));
     }
 
+    //Selecting selector and mapping its labels
+    this.categorySelect = this.rootEl.querySelector(".task-category"); //for the <select>
+    this.categoryOrder = { high: 2, medium: 1, low: 0 }; //map the labels to the numbers so we can sort by category
+
     this.currentSortKey = `${this.storageKey}:sort`; //key for the sort mode (unique per widget)
     this.currentSort = localStorage.getItem(this.currentSortKey); //take current sort key from local storage
 
     //Select the Sort Group
     this.sortGroup = this.rootEl.querySelector(".sort-actions");
     if (this.sortGroup) {
-      this.sortGroup.addEventListener("click", (event) =>
+      this.sortGroup.addEventListener("change", (event) =>
         this.stateToggleSort(event)
       );
     }
 
-    //Selecting selector and mapping its labels
-    this.categorySelect = this.rootEl.querySelector(".task-category"); //for the <select>
-    this.categoryOrder = { high: 2, medium: 1, low: 0 }; //map the labels to the numbers so we can sort by category
+    this.filterKey = `${this.storageKey}:filter`; //key for the filter mode (unique per widget)
+    this.currentFilter = localStorage.getItem(this.filterKey) || ""; //take current key from local storage
 
-    //Selecting the Task List Actions Category Buttons
-    this.categorySortAsc = this.rootEl.querySelector(".categ-sort-asc");
-
-    this.categorySortDesc = this.rootEl.querySelector(".categ-sort-desc");
-
-    //Selecting the Task List Actions Date Buttons
-    this.dateSortAscBtn = this.rootEl.querySelector(".date-sort-asc");
-
-    this.dateSortDescBtn = this.rootEl.querySelector(".date-sort-desc");
+    //Select the category selector
+    this.selectedCategory = this.rootEl.querySelector(".select-category");
+    if (this.selectedCategory) {
+      this.selectedCategory.value = this.currentFilter; //sync the UI value with localStorage
+      this.selectedCategory.addEventListener("change", (event) =>
+        this.displayCategory(event)
+      );
+    }
 
     //Selecting the Task List Bulk Actions Buttons
     this.bulkCompleteBtn = this.rootEl.querySelector(".bulk-complete-btn");
@@ -183,7 +185,6 @@ class TaskList {
       this.logger.error("Could not parse taskArray from localStorage.");
     }
 
-    this.syncSortButtonsUI();
     this.applyCurrentSort();
     this.render();
   }
@@ -192,8 +193,17 @@ class TaskList {
   //Render each task
   //Update header/empty-state visibility
   render() {
+    //start from sorted array
+    let currentArray = this.taskArray;
+
+    if (this.currentFilter) {
+      currentArray = currentArray.filter(
+        (task) => task.categoryLevel === this.currentFilter
+      );
+    }
+
     this.ulList.innerHTML = ""; //removing every single child element inside <ul> to not get duplicates
-    this.taskArray.forEach((task) => this.renderTask(task));
+    currentArray.forEach((task) => this.renderTask(task));
     this.logger.log("All tasks rendered succesfully");
 
     this.headerVisibility();
@@ -278,15 +288,36 @@ class TaskList {
       createdAt: new Date().toISOString(), //create a date instance and convert to string in ISO format(lexicographically)
       categoryLevel: categoryValue, //store the value
       categoryLabel: categoryLabel, //store the label
+      subtasks: [], //create an subtask array for each task
     };
 
     this.taskArray.push(task);
     this.applyCurrentSort();
 
-    this.render(task);
+    this.render();
     this.persist();
 
     this.headerVisibility();
+  }
+
+  appendSubtask(task, subUlListEl, text = "") {
+    const subtask = {
+      title: "",
+      checked: false,
+      completed: false,
+    };
+
+    task.subtasks.push(subtask);
+    this.persist();
+    this.renderSubtask(task, subtask, subUlListEl, { startEditing: true });
+  }
+
+  displayCategory(event) {
+    this.currentFilter = event.target.value;
+
+    localStorage.setItem(this.filterKey, this.currentFilter);
+
+    this.render();
   }
 
   //Function to decide which sort should be applied after a new task has been added/page refresh
@@ -314,34 +345,19 @@ class TaskList {
     }
   }
 
-  //Helper for stateToggleSort() - Keeping sortGroup btn state active when a refresh happens
-  syncSortButtonsUI() {
-    if (!this.sortGroup) {
-      this.logger.log("sortGroup is false");
-      return;
+  //Helpers for subtasks (used in bulkCompleteSelected, bulkDeleteSelected, handleDeleteTask)
+  //Verify if subtasks are completed
+  allSubtasksDone(task) {
+    if (!task.subtasks || task.subtasks.length === 0) {
+      return true;
+    } else {
+      return task.subtasks.every((subtask) => subtask.completed === true);
     }
+  }
 
-    this.sortGroup
-      .querySelectorAll("button")
-      .forEach((btn) => btn.classList.remove("active"));
-
-    const map = {
-      "cat-asc": ".categ-sort-asc",
-      "cat-desc": ".categ-sort-desc",
-      "date-asc": ".date-sort-asc",
-      "date-desc": ".date-sort-desc",
-    };
-
-    const selector = map[this.currentSort];
-    if (selector) {
-      const btn = this.sortGroup.querySelector(selector);
-
-      if (btn) {
-        btn.classList.add("active");
-      } else {
-        this.logger.error("btn is false in syncSortButtonsUI()");
-      }
-    }
+  //Task is only completed if subtasks are completed and it is completed too
+  TaskDone(task) {
+    return task.completed && this.allSubtasksDone(task);
   }
 
   //Clone list
@@ -359,7 +375,7 @@ class TaskList {
       const index = this.taskArray.indexOf(task);
 
       this.taskArray[index].checked = checkbox.checked;
-      this.logger.log(`Object nr.: ${index} is ${task.checked}`);
+      this.logger.log(`Task checkbox nr. ${index} is checked`);
       this.persist();
     });
 
@@ -369,10 +385,38 @@ class TaskList {
     titleSpan.textContent = task.title;
     labelSpan.textContent = task.categoryLabel;
 
-    const delBtn = li.querySelector(".task-delete-btn");
-    delBtn.addEventListener("click", () => {
-      const index = this.taskArray.indexOf(task);
-      this.handleDeleteTask(index, li);
+    //button and ul for the subtasks
+    const addSubBtn = li.querySelector(".add-subtask-btn");
+    let subUlListEl = li.querySelector(".subtask-container");
+
+    //helper to create subtask Ul only when needed
+    const createSubtaskList = () => {
+      if (!subUlListEl) {
+        subUlListEl = document.createElement("ul");
+        subUlListEl.className = "subtask-container";
+        li.appendChild(subUlListEl);
+      }
+      return subUlListEl;
+    };
+
+    //if subtasks do not exist, create array
+    if (!Array.isArray(task.subtasks)) {
+      task.subtasks = [];
+    }
+
+    //if we have any subtasks in this task, call function to create them and then renderSubtask for each
+    if (task.subtasks.length > 0) {
+      const subUlListEl = createSubtaskList();
+
+      task.subtasks.forEach((subtask) =>
+        this.renderSubtask(task, subtask, subUlListEl)
+      );
+    }
+
+    //button for adding subtasks
+    addSubBtn.addEventListener("click", () => {
+      const createdUl = createSubtaskList();
+      this.appendSubtask(task, createdUl, "");
     });
 
     const editBtn = li.querySelector(".task-edit-btn");
@@ -381,17 +425,17 @@ class TaskList {
         return;
       }
 
-      const btn = event.currentTarget; //target btn if img is clicked
-      if (!btn) {
+      const eventEditBtn = event.currentTarget; //target btn if img is clicked
+      if (!eventEditBtn) {
         this.logger.error("Edit button is false in renderTask()");
       }
-      btn.classList.add("active");
+      eventEditBtn.classList.add("active");
 
       titleSpan.contentEditable = true;
       titleSpan.focus();
 
       const finishedEditing = () => {
-        btn.classList.remove("active");
+        eventEditBtn.classList.remove("active");
 
         titleSpan.contentEditable = false;
         const index = this.taskArray.indexOf(task);
@@ -419,6 +463,12 @@ class TaskList {
       titleSpan.addEventListener("keydown", onEnter);
     });
 
+    const delBtn = li.querySelector(".task-delete-btn");
+    delBtn.addEventListener("click", () => {
+      const index = this.taskArray.indexOf(task);
+      this.handleDeleteTask(index, li);
+    });
+
     //These should apply whenever we render, so best place is here
     li.classList.toggle("completed", task.completed); //make the DOM match the object property(BulkCompleteSelected())
     editBtn.classList.toggle("low-opacity", task.completed); //add styling
@@ -426,6 +476,198 @@ class TaskList {
     editBtn.disabled = task.completed; //a boolean that helps disable "on/off"
 
     this.ulList.appendChild(li);
+  }
+
+  renderSubtask(task, subtask, subUlListEl, options = {}) {
+    //if there are no subtasks, don't render anything
+    if (!subtask || typeof subtask !== "object") {
+      return;
+    }
+
+    const subLi = document.createElement("li");
+    subLi.className = "subtask-item";
+
+    //Checkbox
+    const subCheckbox = document.createElement("input");
+    subCheckbox.type = "checkbox";
+    subCheckbox.className = "subtask-checkbox";
+    subCheckbox.checked = subtask.checked;
+
+    //Title
+    const subTitle = document.createElement("span");
+    subTitle.className = "subtask-title";
+    subTitle.textContent = subtask.title;
+
+    //Div for actions on the subtask
+    const subActions = document.createElement("div");
+    subActions.className = "subtask-actions";
+
+    //Complete Button
+    const subCompleteBtn = document.createElement("button");
+    subCompleteBtn.type = "button";
+    subCompleteBtn.className = "subtask-complete-btn";
+
+    //Complete icon
+    const subCompleteImg = document.createElement("img");
+    subCompleteImg.src = "/assets/taskCompleted.svg";
+    subCompleteImg.alt = "Complete Subtask";
+    subCompleteImg.className = "subtask-complete-icon";
+    subCompleteBtn.appendChild(subCompleteImg);
+
+    subCompleteBtn.disabled = !subtask.checked; //disable subCompleteBtn if the checkbox is unchecked
+
+    //Check subtask
+    subCheckbox.addEventListener("click", () => {
+      subtask.checked = subCheckbox.checked;
+      subCompleteBtn.disabled = !subtask.checked;
+      this.logger.log(`subCheckbox is checked`);
+      this.persist();
+    });
+
+    //Complete subtask only if checkbox is checked, toggle style and persist()
+    subCompleteBtn.addEventListener("click", () => {
+      if (!subtask.checked) {
+        this.logger.error("Subtask must be checked in order to be completed");
+        return;
+      }
+      subtask.completed = !subtask.completed;
+      subLi.classList.toggle("completed", subtask.completed);
+      this.persist();
+    });
+
+    //Edit button
+    const subEditBtn = document.createElement("button");
+    subEditBtn.type = "button";
+    subEditBtn.className = "subtask-edit-btn";
+
+    //Edit icon
+    const subEditImg = document.createElement("img");
+    subEditImg.src = "/assets/pencil.svg";
+    subEditImg.alt = "Subtask Edit";
+    subEditImg.className = "subtask-edit-icon";
+    subEditBtn.appendChild(subEditImg);
+
+    //Edit subtask
+    subEditBtn.addEventListener("click", () => {
+      subTitle.contentEditable = true;
+      subTitle.focus();
+
+      const finishedEditing = () => {
+        subTitle.contentEditable = false;
+
+        subtask.title = subTitle.textContent.trim();
+
+        subTitle.removeEventListener("blur", finishedEditing);
+        subTitle.removeEventListener("keydown", onEnter);
+
+        this.persist();
+      };
+
+      const onEnter = (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          finishedEditing();
+        }
+      };
+
+      subTitle.addEventListener("blur", finishedEditing);
+      subTitle.addEventListener("keydown", onEnter);
+    });
+
+    //Delete button
+    const subDelBtn = document.createElement("button");
+    subDelBtn.type = "button";
+    subDelBtn.className = "subtask-delete-btn";
+
+    //Delete icon
+    const subDelImg = document.createElement("img");
+    subDelImg.src = "/assets/trashcan.svg";
+    subDelImg.alt = "Delete subtask";
+    subDelImg.className = "subtask-delete-icon";
+    subDelBtn.appendChild(subDelImg);
+
+    //handle delete subtask
+    subDelBtn.addEventListener("click", () => {
+      const index = task.subtasks.indexOf(subtask);
+      this.handleDeleteSubtask(task, index, subLi);
+    });
+
+    //toggle completed class on subtask
+    subLi.classList.toggle("completed", subtask.completed);
+
+    //for the subtask input
+    const startEditMode = () => {
+      if (subTitle.getAttribute("contenteditable") === "true") {
+        return;
+      }
+
+      //turn the subTitle in an editable area
+      subTitle.setAttribute("contenteditable", "true");
+      subTitle.dataset.placeholder = "Type subtask...";
+
+      //clear any previous text
+      subTitle.textContent = "";
+      subTitle.focus();
+
+      //ensure the caret appears inside immediately and this code runs after rendering DOM(setTimeout)
+      setTimeout(() => {
+        const caretPosition = document.createRange(); //create a range object
+        caretPosition.setStart(subTitle, 0); //place caret at start of subTitle
+        caretPosition.collapse(true); // collapse caret
+
+        const currentTextSelection = window.getSelection(); //represent current text selection
+        currentTextSelection.removeAllRanges(); //clear old selection
+        currentTextSelection.addRange(caretPosition); //apply new caret
+      }, 0);
+
+      const exitEditMode = () => {
+        subTitle.setAttribute("contenteditable", "false");
+        const newTitle = subTitle.textContent.trim();
+
+        //if no title has been added, delete the subtask
+        if (!newTitle) {
+          const subIndex = task.subtasks.indexOf(subtask);
+          if (subIndex > -1) {
+            task.subtasks.splice(subIndex, 1);
+          }
+
+          this.persist();
+          this.render();
+          return;
+        }
+
+        subtask.title = newTitle;
+        subTitle.removeEventListener("blur", exitEditMode);
+        subTitle.removeEventListener("keydown", onEnter);
+        this.persist();
+      };
+
+      const onEnter = (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          exitEditMode();
+        }
+      };
+
+      subTitle.addEventListener("blur", exitEditMode);
+      subTitle.addEventListener("keydown", onEnter);
+    };
+
+    subEditBtn.addEventListener("click", startEditMode);
+
+    //as soon as a subtask is created, edit his title(reuse code from subEditBtn.addEventListener)
+    if (options.startEditing) {
+      startEditMode();
+    }
+
+    subActions.appendChild(subCompleteBtn);
+    subActions.appendChild(subEditBtn);
+    subActions.appendChild(subDelBtn);
+
+    subUlListEl.appendChild(subLi);
+    subLi.appendChild(subCheckbox);
+    subLi.appendChild(subTitle);
+    subLi.appendChild(subActions);
   }
 
   //Update the local storage
@@ -441,31 +683,15 @@ class TaskList {
   }
 
   stateToggleSort(event) {
-    const btn = event.target.closest("button"); //in case the click is on the img
-
-    if (!btn || !this.sortGroup.contains(btn)) {
-      this.logger.error("No btn was found in stateToggleSort()");
-      return;
-    }
-
-    //Decide which button was clicked and remember current sort
-    if (btn.classList.contains("categ-sort-asc")) {
-      this.currentSort = "cat-asc";
-    } else if (btn.classList.contains("categ-sort-desc")) {
-      this.currentSort = "cat-desc";
-    } else if (btn.classList.contains("date-sort-asc")) {
-      this.currentSort = "date-asc";
-    } else if (btn.classList.contains("date-sort-desc")) {
-      this.currentSort = "date-desc";
-    }
+    this.currentSort = event.target.value;
 
     //remember the current sort by storing in local storage
     localStorage.setItem(this.currentSortKey, this.currentSort);
 
-    this.syncSortButtonsUI();
     this.applyCurrentSort();
-    this.render();
+
     this.persist();
+    this.render();
   }
 
   sortCategAsc() {
@@ -503,7 +729,8 @@ class TaskList {
     let completedTasks = 0;
 
     this.taskArray.forEach((task) => {
-      if (task.checked) {
+      //check for subtasks completed too
+      if (task.checked && this.allSubtasksDone(task)) {
         task.completed = true;
         completedTasks++;
       }
@@ -523,7 +750,9 @@ class TaskList {
   bulkDeleteSelected() {
     const before = this.taskArray.length;
 
-    this.taskArray = this.taskArray.filter((task) => !task.checked); //create a list of ids that you want to delete
+    this.taskArray = this.taskArray.filter(
+      (task) => !(task.checked || task.allSubtasksDone(task))
+    );
 
     const removed = before - this.taskArray.length;
 
@@ -536,13 +765,29 @@ class TaskList {
 
   //Handle the delete process of a task -> delete from array, update local storage, remove li from DOM, update headers/empty-state
   handleDeleteTask(index, li) {
+    const task = this.taskArray[index];
+
+    //check if the subtasks are completed
+    if (!this.TaskDone(task)) {
+      this.logger.error("Subtasks are not completed, task cannot be deleted");
+      return;
+    }
+
     this.deleteTask(index);
     this.persist();
     li.remove(); //done like this because it's just for a single element, instead of calling render()
     this.headerVisibility();
   }
+
+  handleDeleteSubtask(task, index, subLi) {
+    task.subtasks.splice(index, 1);
+    this.persist();
+    subLi.remove();
+
+    this.logger.log(`Deleted subtask at index: ${index}`);
+  }
 }
 
 //Define new task list
-new TaskList("groceryList"); //logs should retain key to see in logs where it has beeen done
+new TaskList("groceryList"); //logs should retain key to see in logs where it has been done
 new TaskList("toDoList");
