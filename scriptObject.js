@@ -526,6 +526,11 @@ class TaskList {
 
     //Complete subtask only if checkbox is checked, toggle style and persist()
     subCompleteBtn.addEventListener("click", () => {
+      //complete only once
+      if (subtask.completed) {
+        this.logger.log("Subtask is already completed");
+        return;
+      }
       if (!subtask.checked) {
         this.logger.error("Subtask must be checked in order to be completed");
         return;
@@ -546,33 +551,6 @@ class TaskList {
     subEditImg.alt = "Subtask Edit";
     subEditImg.className = "subtask-edit-icon";
     subEditBtn.appendChild(subEditImg);
-
-    //Edit subtask
-    subEditBtn.addEventListener("click", () => {
-      subTitle.contentEditable = true;
-      subTitle.focus();
-
-      const finishedEditing = () => {
-        subTitle.contentEditable = false;
-
-        subtask.title = subTitle.textContent.trim();
-
-        subTitle.removeEventListener("blur", finishedEditing);
-        subTitle.removeEventListener("keydown", onEnter);
-
-        this.persist();
-      };
-
-      const onEnter = (event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          finishedEditing();
-        }
-      };
-
-      subTitle.addEventListener("blur", finishedEditing);
-      subTitle.addEventListener("keydown", onEnter);
-    });
 
     //Delete button
     const subDelBtn = document.createElement("button");
@@ -595,8 +573,25 @@ class TaskList {
     //toggle completed class on subtask
     subLi.classList.toggle("completed", subtask.completed);
 
-    //for the subtask input
-    const startEditMode = () => {
+    //Editing helpers for caret appearing at start/end
+    //decide if the text already existed or not
+    //function to place caret at end
+    const placeCaretAtEnd = (subTitleEl) => {
+      const caretPosition = document.createRange(); //create a range
+      caretPosition.selectNodeContents(subTitleEl); //tell the range to cover all the text inside
+      caretPosition.collapse(false); //shrink the range to the end of the text
+
+      const currentTextSelection = window.getSelection(); //get the user's text selection in the page
+      currentTextSelection.removeAllRanges(); //clear any existing caret the browser is holding
+      currentTextSelection.addRange(caretPosition); //apply custom range so the caret is set where wanted
+    };
+
+    const startSubtaskEdit = (isSubtaskNew) => {
+      //cannot edit a completed subtask
+      if (subtask.completed) {
+        return;
+      }
+      //if the subtask is already in edit mode, return
       if (subTitle.getAttribute("contenteditable") === "true") {
         return;
       }
@@ -605,22 +600,14 @@ class TaskList {
       subTitle.setAttribute("contenteditable", "true");
       subTitle.dataset.placeholder = "Type subtask...";
 
-      //clear any previous text
-      subTitle.textContent = "";
+      if (isSubtaskNew) {
+        subTitle.textContent = "";
+      }
       subTitle.focus();
 
-      //ensure the caret appears inside immediately and this code runs after rendering DOM(setTimeout)
-      setTimeout(() => {
-        const caretPosition = document.createRange(); //create a range object
-        caretPosition.setStart(subTitle, 0); //place caret at start of subTitle
-        caretPosition.collapse(true); // collapse caret
+      setTimeout(() => placeCaretAtEnd(subTitle), 0);
 
-        const currentTextSelection = window.getSelection(); //represent current text selection
-        currentTextSelection.removeAllRanges(); //clear old selection
-        currentTextSelection.addRange(caretPosition); //apply new caret
-      }, 0);
-
-      const exitEditMode = () => {
+      const finishEdit = () => {
         subTitle.setAttribute("contenteditable", "false");
         const newTitle = subTitle.textContent.trim();
 
@@ -637,7 +624,7 @@ class TaskList {
         }
 
         subtask.title = newTitle;
-        subTitle.removeEventListener("blur", exitEditMode);
+        subTitle.removeEventListener("blur", finishEdit);
         subTitle.removeEventListener("keydown", onEnter);
         this.persist();
       };
@@ -645,29 +632,33 @@ class TaskList {
       const onEnter = (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
-          exitEditMode();
+          finishEdit();
         }
       };
 
-      subTitle.addEventListener("blur", exitEditMode);
+      subTitle.addEventListener("blur", finishEdit);
       subTitle.addEventListener("keydown", onEnter);
     };
 
-    subEditBtn.addEventListener("click", startEditMode);
+    subEditBtn.addEventListener("click", () => startSubtaskEdit(false));
 
     //as soon as a subtask is created, edit his title(reuse code from subEditBtn.addEventListener)
     if (options.startEditing) {
-      startEditMode();
+      startSubtaskEdit(true);
     }
 
+    //first append btns to subActions
     subActions.appendChild(subCompleteBtn);
     subActions.appendChild(subEditBtn);
     subActions.appendChild(subDelBtn);
 
-    subUlListEl.appendChild(subLi);
+    //second append groups to li
     subLi.appendChild(subCheckbox);
     subLi.appendChild(subTitle);
     subLi.appendChild(subActions);
+
+    //third append li to ul
+    subUlListEl.appendChild(subLi);
   }
 
   //Update the local storage
