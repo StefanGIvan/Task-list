@@ -29,6 +29,31 @@ class Logger {
 }
 
 class TaskList {
+  categoryMapping = {
+    //can be an array too
+    low: {
+      label: "Not important",
+      importance: 0,
+    },
+    medium: {
+      label: "Slightly important",
+      importance: 1,
+    },
+    high: {
+      label: "Important",
+      importance: 2,
+    },
+  };
+
+  categoryMappingArray = [
+    //for reference
+    {
+      label: "Not important",
+      importance: 0,
+      id: "low",
+    },
+  ];
+
   constructor(taskListId) {
     this.logger = new Logger(true, `[${taskListId}]`); //each TaskList has its own logger
 
@@ -74,16 +99,51 @@ class TaskList {
       this.form.addEventListener("submit", (event) => this.formListener(event));
     }
 
-    //Selecting selector and mapping its labels
-    this.categorySelect = this.rootEl.querySelector(".task-category"); //for the <select>
-    this.categoryOrder = { high: 2, medium: 1, low: 0 }; //map the labels to the numbers so we can sort by category
+    //Building category selector and populate it with options from categoryMapping
+    this.categorySelect = this.rootEl.querySelector(".task-category"); //for the form <select>
+    if (this.categorySelect) {
+      for (const categoryKey in this.categoryMapping) {
+        //using hasOwnProperty to not loop over inheritance
+        if (this.categoryMapping.hasOwnProperty(categoryKey)) {
+          //get the data object for this category
+          const categoryData = this.categoryMapping[categoryKey];
+
+          //create a new option element
+          const optionEl = document.createElement("option");
+
+          //set the option value to the category key
+          optionEl.value = categoryKey;
+
+          //set the visible label text
+          optionEl.textContent = categoryData.label;
+
+          //append every option to the select
+          this.categorySelect.appendChild(optionEl);
+        }
+      }
+    }
 
     this.currentSortKey = `${this.storageKey}:sort`; //key for the sort mode (unique per widget)
     this.currentSort = localStorage.getItem(this.currentSortKey); //take current sort key from local storage
 
-    //Select the Sort Group
+    //Building sort selector, create options and append to sortGroup
     this.sortGroup = this.rootEl.querySelector(".sort-actions");
     if (this.sortGroup) {
+      const sortOptions = {
+        //mapping, put near categoryMapping
+        "cat-asc": "Sort by ascending category",
+        "cat-desc": "Sort by descending category",
+        "date-asc": "Sort by ascending date",
+        "date-desc": "Sort by descending date",
+      };
+
+      for (const sortKey in sortOptions) {
+        const sortOptionEl = document.createElement("option");
+        sortOptionEl.value = sortKey;
+        sortOptionEl.textContent = sortOptions[sortKey];
+        this.sortGroup.appendChild(sortOptionEl);
+      }
+
       this.sortGroup.addEventListener("change", (event) =>
         this.stateToggleSort(event)
       );
@@ -193,12 +253,14 @@ class TaskList {
   //Render each task
   //Update header/empty-state visibility
   render() {
-    //start from sorted array
     let currentArray = this.taskArray;
 
+    //apply our wanted label from categoryMapping using currentFilter(from selectedCategory.value)
     if (this.currentFilter) {
+      //REDO*/ currentFilter is categoryId - add console.logs
+
       currentArray = currentArray.filter(
-        (task) => task.categoryLevel === this.currentFilter
+        (task) => task.category === this.currentFilter
       );
     }
 
@@ -271,23 +333,22 @@ class TaskList {
     const selectedOption =
       this.categorySelect.options[this.categorySelect.selectedIndex]; //take the index of the option selected
     const categoryValue = selectedOption.value; //value = "high" | "medium" | "low"
-    const categoryLabel = selectedOption.text; //retain the text
 
-    this.appendTask(text, categoryValue, categoryLabel);
+    this.appendTask(text, categoryValue);
     this.input.value = "";
     this.categorySelect.selectedIndex = 0; //back to placeholder ""
   }
 
   //Define task and trim text
   //Push task to array, render it to DOM, update localStorage, update header visibility
-  appendTask(text, categoryValue, categoryLabel) {
+  //to know who label is, folosim categoryMapping[categoryId].label*
+  appendTask(text, categoryId) {
     const task = {
       title: text.trim(),
       checked: false,
       completed: false,
       createdAt: new Date().toISOString(), //create a date instance and convert to string in ISO format(lexicographically)
-      categoryLevel: categoryValue, //store the value
-      categoryLabel: categoryLabel, //store the label
+      category: categoryId, //variable so we can change dynamically which part of map we refer to; folosim categoryValue pentru a face referinta la categoryMapping
       subtasks: [], //create an subtask array for each task
     };
 
@@ -314,6 +375,8 @@ class TaskList {
 
   displayCategory(event) {
     this.currentFilter = event.target.value;
+
+    this.logger.log("Selected filter: " + this.currentFilter); //*
 
     localStorage.setItem(this.filterKey, this.currentFilter);
 
@@ -356,7 +419,7 @@ class TaskList {
   }
 
   //Task is only completed if subtasks are completed and it is completed too
-  TaskDone(task) {
+  taskDone(task) {
     return task.completed && this.allSubtasksDone(task);
   }
 
@@ -383,7 +446,7 @@ class TaskList {
     const labelSpan = li.querySelector(".task-label");
 
     titleSpan.textContent = task.title;
-    labelSpan.textContent = task.categoryLabel;
+    labelSpan.textContent = task.category.label;
 
     //button and ul for the subtasks
     const addSubBtn = li.querySelector(".add-subtask-btn");
@@ -677,7 +740,7 @@ class TaskList {
     this.currentSort = event.target.value;
 
     //remember the current sort by storing in local storage
-    localStorage.setItem(this.currentSortKey, this.currentSort);
+    localStorage.setItem(this.currentSortKey, this.currentSort); //not needed*
 
     this.applyCurrentSort();
 
@@ -687,18 +750,14 @@ class TaskList {
 
   sortCategAsc() {
     this.taskArray.sort(
-      (a, b) =>
-        this.categoryOrder[a.categoryLevel] -
-        this.categoryOrder[b.categoryLevel]
-    );
+      (a, b) => a.category.importance - b.category.importance
+    ); //*
   }
 
   sortCategDesc() {
     this.taskArray.sort(
-      (a, b) =>
-        this.categoryOrder[b.categoryLevel] -
-        this.categoryOrder[a.categoryLevel]
-    );
+      (a, b) => b.category.importance - a.category.importance
+    ); //*
   }
 
   //Sort the array in ascending order and reflect on DOM
@@ -759,7 +818,7 @@ class TaskList {
     const task = this.taskArray[index];
 
     //check if the subtasks are completed
-    if (!this.TaskDone(task)) {
+    if (!this.taskDone(task)) {
       this.logger.error("Subtasks are not completed, task cannot be deleted");
       return;
     }
