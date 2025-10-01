@@ -45,6 +45,13 @@ class TaskList {
     },
   };
 
+  sortOptions = {
+    "cat-asc": "Sort by ascending category",
+    "cat-desc": "Sort by descending category",
+    "date-asc": "Sort by ascending date",
+    "date-desc": "Sort by descending date",
+  };
+
   categoryMappingArray = [
     //for reference
     {
@@ -88,6 +95,7 @@ class TaskList {
       this.logger.error("task-template not found");
       return;
     }
+
     //Take the first child of the itemTemplate
     this.itemTemplateEl = itemTemplate.content.firstElementChild;
 
@@ -123,45 +131,54 @@ class TaskList {
       }
     }
 
-    this.currentSortKey = `${this.storageKey}:sort`; //key for the sort mode (unique per widget)
-    this.currentSort = localStorage.getItem(this.currentSortKey); //take current sort key from local storage
-
-    //Building sort selector, create options and append to sortGroup
-    this.sortGroup = this.rootEl.querySelector(".sort-actions");
-    if (this.sortGroup) {
-      const sortOptions = {
-        //mapping, put near categoryMapping
-        "cat-asc": "Sort by ascending category",
-        "cat-desc": "Sort by descending category",
-        "date-asc": "Sort by ascending date",
-        "date-desc": "Sort by descending date",
-      };
-
-      for (const sortKey in sortOptions) {
+    //Building sort selector, create options and append to sortGroupInput
+    this.sortGroupInput = this.rootEl.querySelector(".sort-actions");
+    if (this.sortGroupInput) {
+      for (const sortKey in this.sortOptions) {
         const sortOptionEl = document.createElement("option");
         sortOptionEl.value = sortKey;
-        sortOptionEl.textContent = sortOptions[sortKey];
-        this.sortGroup.appendChild(sortOptionEl);
+        sortOptionEl.textContent = this.sortOptions[sortKey];
+        this.sortGroupInput.appendChild(sortOptionEl);
       }
 
-      this.sortGroup.addEventListener("change", (event) =>
+      this.currentSort = this.sortGroupInput.value;
+      this.sortGroupInput.addEventListener("change", (event) =>
         this.stateToggleSort(event)
       );
     }
 
-    this.filterKey = `${this.storageKey}:filter`; //key for the filter mode (unique per widget)
-    this.currentFilter = localStorage.getItem(this.filterKey) || ""; //take current key from local storage
+    //Built the selectedCategoryInput selector, populated with All & options, set the selected value and put All option as placeholder
+    this.selectedCategoryInput = this.rootEl.querySelector(".select-category");
+    if (this.selectedCategoryInput) {
+      //wipe out previous category HTML
+      this.selectedCategoryInput.innerHTML = "";
 
-    //Select the category selector
-    this.selectedCategory = this.rootEl.querySelector(".select-category");
-    if (this.selectedCategory) {
-      this.selectedCategory.value = this.currentFilter; //sync the UI value with localStorage
-      this.selectedCategory.addEventListener("change", (event) =>
+      //build the "All" option first
+      const allOptions = document.createElement("option");
+      allOptions.value = "";
+      allOptions.textContent = "All";
+      this.selectedCategoryInput.appendChild(allOptions);
+
+      //Add categories
+      for (const filterKey in this.categoryMapping) {
+        const label = this.categoryMapping[filterKey].label;
+        const filterOptionEl = document.createElement("option");
+        filterOptionEl.value = filterKey;
+        filterOptionEl.textContent = label;
+        this.selectedCategoryInput.appendChild(filterOptionEl);
+      }
+
+      //Put All as placeholder
+      if (this.selectedCategoryInput.selectedIndex === -1) {
+        this.selectedCategoryInput.selectedIndex = 0;
+      }
+      this.categoryFilter = this.selectedCategoryInput.value;
+      this.selectedCategoryInput.addEventListener("change", (event) =>
         this.displayCategory(event)
       );
     }
 
-    //Selecting the Task List Bulk Actions Buttons
+    //Selecting the Bulk Actions Button
     this.bulkCompleteBtn = this.rootEl.querySelector(".bulk-complete-btn");
     if (this.bulkCompleteBtn) {
       this.bulkCompleteBtn.addEventListener("click", () =>
@@ -255,12 +272,9 @@ class TaskList {
   render() {
     let currentArray = this.taskArray;
 
-    //apply our wanted label from categoryMapping using currentFilter(from selectedCategory.value)
-    if (this.currentFilter) {
-      //REDO*/ currentFilter is categoryId - add console.logs
-
+    if (this.categoryFilter) {
       currentArray = currentArray.filter(
-        (task) => task.category === this.currentFilter
+        (task) => task.category === this.categoryFilter
       );
     }
 
@@ -332,23 +346,23 @@ class TaskList {
     //For the <select>
     const selectedOption =
       this.categorySelect.options[this.categorySelect.selectedIndex]; //take the index of the option selected
-    const categoryValue = selectedOption.value; //value = "high" | "medium" | "low"
+    const categoryId = selectedOption.value; //value = "high" | "medium" | "low"
 
-    this.appendTask(text, categoryValue);
+    this.appendTask(text, categoryId);
     this.input.value = "";
     this.categorySelect.selectedIndex = 0; //back to placeholder ""
   }
 
   //Define task and trim text
   //Push task to array, render it to DOM, update localStorage, update header visibility
-  //to know who label is, folosim categoryMapping[categoryId].label*
+  //to know who label is, use categoryMapping[categoryId].label*
   appendTask(text, categoryId) {
     const task = {
       title: text.trim(),
       checked: false,
       completed: false,
       createdAt: new Date().toISOString(), //create a date instance and convert to string in ISO format(lexicographically)
-      category: categoryId, //variable so we can change dynamically which part of map we refer to; folosim categoryValue pentru a face referinta la categoryMapping
+      category: categoryId, //variable so we can change dynamically which part of map we refer to; we use categoryValue for reference at categoryMapping
       subtasks: [], //create an subtask array for each task
     };
 
@@ -374,11 +388,9 @@ class TaskList {
   }
 
   displayCategory(event) {
-    this.currentFilter = event.target.value;
+    this.categoryFilter = event.target.value;
 
-    this.logger.log("Selected filter: " + this.currentFilter); //*
-
-    localStorage.setItem(this.filterKey, this.currentFilter);
+    this.logger.log("Selected filter: " + this.categoryFilter);
 
     this.render();
   }
@@ -446,7 +458,7 @@ class TaskList {
     const labelSpan = li.querySelector(".task-label");
 
     titleSpan.textContent = task.title;
-    labelSpan.textContent = task.category.label;
+    labelSpan.textContent = this.categoryMapping[task.category].label;
 
     //button and ul for the subtasks
     const addSubBtn = li.querySelector(".add-subtask-btn");
@@ -705,7 +717,7 @@ class TaskList {
 
     subEditBtn.addEventListener("click", () => startSubtaskEdit(false));
 
-    //as soon as a subtask is created, edit his title(reuse code from subEditBtn.addEventListener)
+    //as soon as a subtask is created, edit his title
     if (options.startEditing) {
       startSubtaskEdit(true);
     }
@@ -739,25 +751,27 @@ class TaskList {
   stateToggleSort(event) {
     this.currentSort = event.target.value;
 
-    //remember the current sort by storing in local storage
-    localStorage.setItem(this.currentSortKey, this.currentSort); //not needed*
-
     this.applyCurrentSort();
 
-    this.persist();
     this.render();
   }
 
   sortCategAsc() {
-    this.taskArray.sort(
-      (a, b) => a.category.importance - b.category.importance
-    ); //*
+    this.taskArray.sort((a, b) => {
+      return (
+        this.categoryMapping[a.category].importance -
+        this.categoryMapping[b.category].importance
+      );
+    });
   }
 
   sortCategDesc() {
-    this.taskArray.sort(
-      (a, b) => b.category.importance - a.category.importance
-    ); //*
+    this.taskArray.sort((a, b) => {
+      return (
+        this.categoryMapping[b.category].importance -
+        this.categoryMapping[a.category].importance
+      );
+    });
   }
 
   //Sort the array in ascending order and reflect on DOM
@@ -839,5 +853,5 @@ class TaskList {
 }
 
 //Define new task list
-new TaskList("groceryList"); //logs should retain key to see in logs where it has been done
+window.firstWidget = new TaskList("groceryList"); //logs should retain key to see in logs where it has been done
 new TaskList("toDoList");
