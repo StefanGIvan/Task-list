@@ -29,6 +29,38 @@ class Logger {
 }
 
 class TaskList {
+  categoryMapping = {
+    //can be an array too
+    low: {
+      label: "Not important",
+      importance: 0,
+    },
+    medium: {
+      label: "Slightly important",
+      importance: 1,
+    },
+    high: {
+      label: "Important",
+      importance: 2,
+    },
+  };
+
+  sortOptions = {
+    "cat-asc": "Sort by ascending category",
+    "cat-desc": "Sort by descending category",
+    "date-asc": "Sort by ascending date",
+    "date-desc": "Sort by descending date",
+  };
+
+  categoryMappingArray = [
+    //for reference
+    {
+      label: "Not important",
+      importance: 0,
+      id: "low",
+    },
+  ];
+
   constructor(taskListId) {
     this.logger = new Logger(true, `[${taskListId}]`); //each TaskList has its own logger
 
@@ -63,6 +95,7 @@ class TaskList {
       this.logger.error("task-template not found");
       return;
     }
+
     //Take the first child of the itemTemplate
     this.itemTemplateEl = itemTemplate.content.firstElementChild;
 
@@ -74,34 +107,78 @@ class TaskList {
       this.form.addEventListener("submit", (event) => this.formListener(event));
     }
 
-    //Selecting selector and mapping its labels
-    this.categorySelect = this.rootEl.querySelector(".task-category"); //for the <select>
-    this.categoryOrder = { high: 2, medium: 1, low: 0 }; //map the labels to the numbers so we can sort by category
+    //Building category selector and populate it with options from categoryMapping
+    this.categorySelect = this.rootEl.querySelector(".task-category"); //for the form <select>
+    if (this.categorySelect) {
+      for (const categoryKey in this.categoryMapping) {
+        //using hasOwnProperty to not loop over inheritance
+        if (this.categoryMapping.hasOwnProperty(categoryKey)) {
+          //get the data object for this category
+          const categoryData = this.categoryMapping[categoryKey];
 
-    this.currentSortKey = `${this.storageKey}:sort`; //key for the sort mode (unique per widget)
-    this.currentSort = localStorage.getItem(this.currentSortKey); //take current sort key from local storage
+          //create a new option element
+          const optionEl = document.createElement("option");
 
-    //Select the Sort Group
-    this.sortGroup = this.rootEl.querySelector(".sort-actions");
-    if (this.sortGroup) {
-      this.sortGroup.addEventListener("change", (event) =>
+          //set the option value to the category key
+          optionEl.value = categoryKey;
+
+          //set the visible label text
+          optionEl.textContent = categoryData.label;
+
+          //append every option to the select
+          this.categorySelect.appendChild(optionEl);
+        }
+      }
+    }
+
+    //Building sort selector, create options and append to sortGroupInput
+    this.sortGroupInput = this.rootEl.querySelector(".sort-actions");
+    if (this.sortGroupInput) {
+      for (const sortKey in this.sortOptions) {
+        const sortOptionEl = document.createElement("option");
+        sortOptionEl.value = sortKey;
+        sortOptionEl.textContent = this.sortOptions[sortKey];
+        this.sortGroupInput.appendChild(sortOptionEl);
+      }
+
+      this.currentSort = this.sortGroupInput.value;
+      this.sortGroupInput.addEventListener("change", (event) =>
         this.stateToggleSort(event)
       );
     }
 
-    this.filterKey = `${this.storageKey}:filter`; //key for the filter mode (unique per widget)
-    this.currentFilter = localStorage.getItem(this.filterKey) || ""; //take current key from local storage
+    //Built the selectedCategoryInput selector, populated with All & options, set the selected value and put All option as placeholder
+    this.selectedCategoryInput = this.rootEl.querySelector(".select-category");
+    if (this.selectedCategoryInput) {
+      //wipe out previous category HTML
+      this.selectedCategoryInput.innerHTML = "";
 
-    //Select the category selector
-    this.selectedCategory = this.rootEl.querySelector(".select-category");
-    if (this.selectedCategory) {
-      this.selectedCategory.value = this.currentFilter; //sync the UI value with localStorage
-      this.selectedCategory.addEventListener("change", (event) =>
+      //build the "All" option first
+      const allOptions = document.createElement("option");
+      allOptions.value = "";
+      allOptions.textContent = "All";
+      this.selectedCategoryInput.appendChild(allOptions);
+
+      //Add categories
+      for (const filterKey in this.categoryMapping) {
+        const label = this.categoryMapping[filterKey].label;
+        const filterOptionEl = document.createElement("option");
+        filterOptionEl.value = filterKey;
+        filterOptionEl.textContent = label;
+        this.selectedCategoryInput.appendChild(filterOptionEl);
+      }
+
+      //Put All as placeholder
+      if (this.selectedCategoryInput.selectedIndex === -1) {
+        this.selectedCategoryInput.selectedIndex = 0;
+      }
+      this.categoryFilter = this.selectedCategoryInput.value;
+      this.selectedCategoryInput.addEventListener("change", (event) =>
         this.displayCategory(event)
       );
     }
 
-    //Selecting the Task List Bulk Actions Buttons
+    //Selecting the Bulk Actions Button
     this.bulkCompleteBtn = this.rootEl.querySelector(".bulk-complete-btn");
     if (this.bulkCompleteBtn) {
       this.bulkCompleteBtn.addEventListener("click", () =>
@@ -193,12 +270,11 @@ class TaskList {
   //Render each task
   //Update header/empty-state visibility
   render() {
-    //start from sorted array
     let currentArray = this.taskArray;
 
-    if (this.currentFilter) {
+    if (this.categoryFilter) {
       currentArray = currentArray.filter(
-        (task) => task.categoryLevel === this.currentFilter
+        (task) => task.category === this.categoryFilter
       );
     }
 
@@ -270,24 +346,23 @@ class TaskList {
     //For the <select>
     const selectedOption =
       this.categorySelect.options[this.categorySelect.selectedIndex]; //take the index of the option selected
-    const categoryValue = selectedOption.value; //value = "high" | "medium" | "low"
-    const categoryLabel = selectedOption.text; //retain the text
+    const categoryId = selectedOption.value; //value = "high" | "medium" | "low"
 
-    this.appendTask(text, categoryValue, categoryLabel);
+    this.appendTask(text, categoryId);
     this.input.value = "";
     this.categorySelect.selectedIndex = 0; //back to placeholder ""
   }
 
   //Define task and trim text
   //Push task to array, render it to DOM, update localStorage, update header visibility
-  appendTask(text, categoryValue, categoryLabel) {
+  //to know who label is, use categoryMapping[categoryId].label*
+  appendTask(text, categoryId) {
     const task = {
       title: text.trim(),
       checked: false,
       completed: false,
       createdAt: new Date().toISOString(), //create a date instance and convert to string in ISO format(lexicographically)
-      categoryLevel: categoryValue, //store the value
-      categoryLabel: categoryLabel, //store the label
+      category: categoryId, //variable so we can change dynamically which part of map we refer to; we use categoryValue for reference at categoryMapping
       subtasks: [], //create an subtask array for each task
     };
 
@@ -313,9 +388,9 @@ class TaskList {
   }
 
   displayCategory(event) {
-    this.currentFilter = event.target.value;
+    this.categoryFilter = event.target.value;
 
-    localStorage.setItem(this.filterKey, this.currentFilter);
+    this.logger.log("Selected filter: " + this.categoryFilter);
 
     this.render();
   }
@@ -356,7 +431,7 @@ class TaskList {
   }
 
   //Task is only completed if subtasks are completed and it is completed too
-  TaskDone(task) {
+  taskDone(task) {
     return task.completed && this.allSubtasksDone(task);
   }
 
@@ -383,7 +458,7 @@ class TaskList {
     const labelSpan = li.querySelector(".task-label");
 
     titleSpan.textContent = task.title;
-    labelSpan.textContent = task.categoryLabel;
+    labelSpan.textContent = this.categoryMapping[task.category].label;
 
     //button and ul for the subtasks
     const addSubBtn = li.querySelector(".add-subtask-btn");
@@ -642,7 +717,7 @@ class TaskList {
 
     subEditBtn.addEventListener("click", () => startSubtaskEdit(false));
 
-    //as soon as a subtask is created, edit his title(reuse code from subEditBtn.addEventListener)
+    //as soon as a subtask is created, edit his title
     if (options.startEditing) {
       startSubtaskEdit(true);
     }
@@ -676,29 +751,27 @@ class TaskList {
   stateToggleSort(event) {
     this.currentSort = event.target.value;
 
-    //remember the current sort by storing in local storage
-    localStorage.setItem(this.currentSortKey, this.currentSort);
-
     this.applyCurrentSort();
 
-    this.persist();
     this.render();
   }
 
   sortCategAsc() {
-    this.taskArray.sort(
-      (a, b) =>
-        this.categoryOrder[a.categoryLevel] -
-        this.categoryOrder[b.categoryLevel]
-    );
+    this.taskArray.sort((a, b) => {
+      return (
+        this.categoryMapping[a.category].importance -
+        this.categoryMapping[b.category].importance
+      );
+    });
   }
 
   sortCategDesc() {
-    this.taskArray.sort(
-      (a, b) =>
-        this.categoryOrder[b.categoryLevel] -
-        this.categoryOrder[a.categoryLevel]
-    );
+    this.taskArray.sort((a, b) => {
+      return (
+        this.categoryMapping[b.category].importance -
+        this.categoryMapping[a.category].importance
+      );
+    });
   }
 
   //Sort the array in ascending order and reflect on DOM
@@ -759,7 +832,7 @@ class TaskList {
     const task = this.taskArray[index];
 
     //check if the subtasks are completed
-    if (!this.TaskDone(task)) {
+    if (!this.taskDone(task)) {
       this.logger.error("Subtasks are not completed, task cannot be deleted");
       return;
     }
@@ -780,5 +853,5 @@ class TaskList {
 }
 
 //Define new task list
-new TaskList("groceryList"); //logs should retain key to see in logs where it has been done
+window.firstWidget = new TaskList("groceryList"); //logs should retain key to see in logs where it has been done
 new TaskList("toDoList");
