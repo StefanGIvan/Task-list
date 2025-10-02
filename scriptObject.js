@@ -147,36 +147,13 @@ class TaskList {
       );
     }
 
-    //Built the selectedCategoryInput selector, populated with All & options, set the selected value and put All option as placeholder
-    this.selectedCategoryInput = this.rootEl.querySelector(".select-category");
-    if (this.selectedCategoryInput) {
-      //wipe out previous category HTML
-      this.selectedCategoryInput.innerHTML = "";
-
-      //build the "All" option first
-      const allOptions = document.createElement("option");
-      allOptions.value = "";
-      allOptions.textContent = "All";
-      this.selectedCategoryInput.appendChild(allOptions);
-
-      //Add categories
-      for (const filterKey in this.categoryMapping) {
-        const label = this.categoryMapping[filterKey].label;
-        const filterOptionEl = document.createElement("option");
-        filterOptionEl.value = filterKey;
-        filterOptionEl.textContent = label;
-        this.selectedCategoryInput.appendChild(filterOptionEl);
-      }
-
-      //Put All as placeholder
-      if (this.selectedCategoryInput.selectedIndex === -1) {
-        this.selectedCategoryInput.selectedIndex = 0;
-      }
-      this.categoryFilter = this.selectedCategoryInput.value;
-      this.selectedCategoryInput.addEventListener("change", (event) =>
-        this.displayCategory(event)
-      );
+    //Select, Verify El, set current selected value to "" and build component
+    const categoryFilterEl = this.rootEl.querySelector(".category-filter");
+    if (categoryFilterEl) {
+      categoryFilterEl.innerHTML = "";
+      this.buildCategoryFilterComponent(categoryFilterEl);
     }
+    this.selectedCategories = new Set(); //keep track of selected categories
 
     //Selecting the Bulk Actions Button
     this.bulkCompleteBtn = this.rootEl.querySelector(".bulk-complete-btn");
@@ -266,15 +243,178 @@ class TaskList {
     this.render();
   }
 
+  setCategoryFilter(categoryValue) {
+    this.currentCategoryFilter = categoryValue;
+
+    this.logger.log("Selected category filter: " + this.currentCategoryFilter);
+
+    this.render();
+  }
+
+  buildCategoryFilterComponent(categoryFilterEl) {
+    //Div
+    const categoryDivEl = document.createElement("div");
+    categoryDivEl.className = "category-filter";
+
+    //Button
+    const categoryBtnEl = document.createElement("button");
+    categoryBtnEl.type = "button";
+    categoryBtnEl.className = "category-filter-button";
+
+    //Button Label
+    const categoryBtnLabelEl = document.createElement("span");
+    categoryBtnLabelEl.className = "category-filter-label";
+    categoryBtnEl.appendChild(categoryBtnLabelEl);
+
+    //Chevron
+    const categoryChevronEl = document.createElement("span");
+    categoryChevronEl.className = "category-filter-chevron";
+    categoryChevronEl.textContent = "⌄";
+    categoryBtnEl.appendChild(categoryChevronEl);
+
+    //Panel
+    const categoryPanelEl = document.createElement("div");
+    categoryPanelEl.className = "category-filter-panel";
+    categoryPanelEl.hidden = true; //start closed
+
+    //Category Rows
+    const addCategoryRow = (categoryValue, categoryText) => {
+      //Row Element
+      const categoryRowEl = document.createElement("div");
+      categoryRowEl.className = "category-filter-item";
+      categoryRowEl.dataset.value = categoryValue;
+
+      //Row checkbox
+      const categoryCheckEl = document.createElement("input");
+      categoryCheckEl.type = "checkbox";
+      categoryCheckEl.className = "category-filter-checkbox";
+      categoryCheckEl.tabIndex = -1; //so we can click the row
+
+      //Row Label
+      const categoryLabelEl = document.createElement("span");
+      categoryLabelEl.textContent = categoryText;
+
+      //mount checkbox and label
+      categoryRowEl.appendChild(categoryCheckEl);
+      categoryRowEl.appendChild(categoryLabelEl);
+
+      //for a row clicked we set the currentCategoryFilter and we render() and then set up
+      categoryRowEl.addEventListener("click", (event) => {
+        event.stopPropagation(); //don't close dropdown when you click inside it
+        const rowValue = categoryRowEl.dataset.value;
+
+        //if we have that row value in Set (as we clicked the row) remove it, else add it
+        if (this.selectedCategories.has(rowValue)) {
+          this.selectedCategories.delete(rowValue);
+        } else {
+          this.selectedCategories.add(rowValue);
+        }
+
+        syncChecks();
+        updateButtonLabel();
+        this.render();
+      });
+      categoryPanelEl.appendChild(categoryRowEl);
+    };
+    addCategoryRow("", "All");
+
+    //Build items
+    for (const [categoryKey, categoryData] of Object.entries(
+      this.categoryMapping
+    )) {
+      addCategoryRow(categoryKey, categoryData.label);
+    }
+
+    //Open Panel
+    const openCategoryPanel = () => {
+      categoryPanelEl.hidden = false;
+    };
+
+    //Close Panel
+    const closeCategoryPanel = () => {
+      categoryPanelEl.hidden = true;
+    };
+
+    //Toggle Open/Close Panel. If it's hidden -> open, visible -> close
+    const toggleCategoryPanel = () => {
+      categoryPanelEl.hidden = !categoryPanelEl.hidden;
+    };
+
+    //Close panel when clicking outside of Div
+    const onDocClick = (event) => {
+      if (!categoryDivEl.contains(event.target)) {
+        closeCategoryPanel();
+      }
+    };
+
+    //Update the label of the button by the currentFilter
+    const updateButtonLabel = () => {
+      //Turn the Set into an Array
+      const selectedValues = Array.from(this.selectedValues);
+
+      //Remove empty "" (refering to all option)
+      const filteredValues = selectedValues.filter((value) => value !== "");
+
+      let labelText;
+
+      //if nothing is chosen, show All
+      if (filteredValues.length === 0) {
+        labelText = "All";
+      } else {
+        //otherwise map each value to its label and join with commas
+        const labels = filteredValues.map(
+          (value) => this.categoryMapping[value].label
+        );
+        labelText = labels.join(", ");
+      }
+
+      //update the text
+      categoryBtnLabelEl.textContent = labelText;
+    };
+
+    //sync the checkbox with the current category filter
+    const syncChecks = () => {
+      //Find all the option rows inside the Panel
+      const optionRows = categoryPanelEl.querySelectorAll(
+        ".category-filter-item"
+      );
+      //Loop through them
+      optionRows.forEach((optionRow) => {
+        //take the value of that row
+        const optionValue = optionRow.dataset.value;
+        //find the checkbox of that row
+        const checkboxEl = optionRow.querySelector(".category-filter-checkbox");
+        //tick the checkbox if the optionValue is the same as current category filter
+        checkboxEl.checked = optionValue === this.currentCategoryFilter;
+      });
+    };
+
+    //wiring events
+    categoryBtnEl.addEventListener("click", (event) => {
+      e.stopPropagation();
+      toggleCategoryPanel();
+    });
+    document.addEventListener("click", onDocClick);
+
+    //update labels and sync checkboxes
+    updateButtonLabel();
+    syncChecks();
+
+    //mount
+    categoryDivEl.appendChild(categoryBtnEl);
+    categoryDivEl.appendChild(categoryPanelEl);
+    categoryFilterEl.appendChild(categoryDivEl);
+  }
+
   //Wipe out ul so no duplicates
   //Render each task
   //Update header/empty-state visibility
   render() {
     let currentArray = this.taskArray;
 
-    if (this.categoryFilter) {
+    if (this.currentCategoryFilter) {
       currentArray = currentArray.filter(
-        (task) => task.category === this.categoryFilter
+        (task) => task.category === this.currentCategoryFilter
       );
     }
 
@@ -385,14 +525,6 @@ class TaskList {
     task.subtasks.push(subtask);
     this.persist();
     this.renderSubtask(task, subtask, subUlListEl, { startEditing: true });
-  }
-
-  displayCategory(event) {
-    this.categoryFilter = event.target.value;
-
-    this.logger.log("Selected filter: " + this.categoryFilter);
-
-    this.render();
   }
 
   //Function to decide which sort should be applied after a new task has been added/page refresh
