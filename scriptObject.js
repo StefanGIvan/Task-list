@@ -147,35 +147,12 @@ class TaskList {
       );
     }
 
-    //Built the selectedCategoryInput selector, populated with All & options, set the selected value and put All option as placeholder
-    this.selectedCategoryInput = this.rootEl.querySelector(".select-category");
-    if (this.selectedCategoryInput) {
-      //wipe out previous category HTML
-      this.selectedCategoryInput.innerHTML = "";
-
-      //build the "All" option first
-      const allOptions = document.createElement("option");
-      allOptions.value = "";
-      allOptions.textContent = "All";
-      this.selectedCategoryInput.appendChild(allOptions);
-
-      //Add categories
-      for (const filterKey in this.categoryMapping) {
-        const label = this.categoryMapping[filterKey].label;
-        const filterOptionEl = document.createElement("option");
-        filterOptionEl.value = filterKey;
-        filterOptionEl.textContent = label;
-        this.selectedCategoryInput.appendChild(filterOptionEl);
-      }
-
-      //Put All as placeholder
-      if (this.selectedCategoryInput.selectedIndex === -1) {
-        this.selectedCategoryInput.selectedIndex = 0;
-      }
-      this.categoryFilter = this.selectedCategoryInput.value;
-      this.selectedCategoryInput.addEventListener("change", (event) =>
-        this.displayCategory(event)
-      );
+    this.selectedCategories = new Set(); //keep track of selected categories
+    //Select, Verify El, set current selected value to "" and build component
+    const categoryFilterEl = this.rootEl.querySelector(".category-filter");
+    if (categoryFilterEl) {
+      categoryFilterEl.innerHTML = "";
+      this.buildCategoryFilterComponent(categoryFilterEl);
     }
 
     //Selecting the Bulk Actions Button
@@ -266,21 +243,264 @@ class TaskList {
     this.render();
   }
 
+  buildCategoryFilterComponent(categoryFilterEl) {
+    this.logger.log(
+      "category-filter: initializing buildCategoryFilterComponent()"
+    );
+
+    //Div
+    const categoryDivEl = document.createElement("div");
+    categoryDivEl.className = "category-filter";
+
+    //Button
+    const categoryBtnEl = document.createElement("button");
+    categoryBtnEl.type = "button";
+    categoryBtnEl.className = "category-filter-button";
+
+    //Button Label
+    const categoryBtnLabelEl = document.createElement("span");
+    categoryBtnLabelEl.className = "category-filter-label";
+    categoryBtnEl.appendChild(categoryBtnLabelEl);
+
+    //Chevron
+    const categoryChevronEl = document.createElement("span");
+    categoryChevronEl.className = "category-filter-chevron";
+    categoryChevronEl.textContent = "⌄";
+    categoryBtnEl.appendChild(categoryChevronEl);
+
+    //Panel
+    const categoryPanelEl = document.createElement("div");
+    categoryPanelEl.className = "category-filter-panel";
+    categoryPanelEl.hidden = true; //start closed
+
+    //Category Rows
+    const addCategoryRow = (categoryValue, categoryText) => {
+      //Row Element
+      const categoryRowEl = document.createElement("div");
+      categoryRowEl.className = "category-filter-item";
+      categoryRowEl.dataset.value = categoryValue;
+
+      //Row checkbox
+      const categoryCheckEl = document.createElement("input");
+      categoryCheckEl.type = "checkbox";
+      categoryCheckEl.className = "category-filter-checkbox";
+      categoryCheckEl.tabIndex = -1; //so we can click the row
+
+      //Row Label
+      const categoryLabelEl = document.createElement("span");
+      categoryLabelEl.textContent = categoryText;
+
+      //mount checkbox and label
+      categoryRowEl.appendChild(categoryCheckEl);
+      categoryRowEl.appendChild(categoryLabelEl);
+
+      this.logger.log(
+        "category-filter: add row - categoryValue = " +
+          categoryValue +
+          " text = " +
+          categoryText
+      );
+
+      //for a row clicked we set the currentCategoryFilter and we render() and then set up
+      categoryRowEl.addEventListener("click", (event) => {
+        event.stopPropagation(); //don't close dropdown when you click inside it
+        const rowValue = categoryRowEl.dataset.value;
+
+        this.logger.log(
+          "category-filter: click row - rowValue = " +
+            rowValue +
+            " before selectedCategories is mutated: " +
+            this.selectedCategories
+        );
+
+        if (rowValue === "") {
+          //All was clicked -> clear selectedCategories
+          this.selectedCategories.clear();
+
+          this.logger.log(
+            "category-filter: All selected -> cleared selectedCategories: " +
+              this.selectedCategories
+          );
+        } else {
+          //if we have that row value in Set (as we clicked the row) remove it, else add it
+          if (this.selectedCategories.has(rowValue)) {
+            this.selectedCategories.delete(rowValue);
+
+            this.logger.log(
+              "category-filter: removed " +
+                rowValue +
+                " from selectedCategories"
+            );
+          } else {
+            this.selectedCategories.add(rowValue);
+
+            this.logger.log(
+              "category-filter: added " + rowValue + " to selectedCategories"
+            );
+          }
+        }
+
+        this.logger.log(
+          "category-filter: after categoryRowEl clicked - selected = " +
+            Array.from(this.selectedCategories).join(", ")
+        );
+
+        syncChecks();
+        updateButtonLabel();
+        this.render();
+      });
+
+      categoryPanelEl.appendChild(categoryRowEl);
+    };
+
+    addCategoryRow("", "All");
+
+    //Build items
+    for (const [categoryKey, categoryData] of Object.entries(
+      this.categoryMapping
+    )) {
+      addCategoryRow(categoryKey, categoryData.label);
+    }
+
+    //Open Panel
+    const openCategoryPanel = () => {
+      categoryPanelEl.hidden = false;
+
+      this.logger.log("category-filter: panel OPEN");
+    };
+
+    //Close Panel
+    const closeCategoryPanel = () => {
+      categoryPanelEl.hidden = true;
+
+      this.logger.log("category-filter: panel CLOSED");
+    };
+
+    //Toggle Open/Close Panel. If it's hidden -> open, visible -> close
+    const toggleCategoryPanel = () => {
+      categoryPanelEl.hidden = !categoryPanelEl.hidden;
+
+      this.logger.log("category-filter: toggle: " + categoryPanelEl.hidden);
+    };
+
+    //Close panel when clicking outside of Div
+    const onDocClick = (event) => {
+      if (!categoryDivEl.contains(event.target)) {
+        closeCategoryPanel();
+
+        this.logger("category-filter: otuside click - panel closed");
+      }
+    };
+
+    //Update the label of the button by the currentFilter
+    const updateButtonLabel = () => {
+      //Turn the Set into an Array
+      const selectedCategoriesArray = Array.from(this.selectedCategories);
+      console.log("From updateButtonLabel: " + this.selectedCategories);
+
+      //Remove empty "" (refering to all option)
+      const filteredCategories = selectedCategoriesArray.filter(
+        (value) => value !== ""
+      );
+
+      let displayText;
+
+      //if nothing is chosen, show All
+      if (filteredCategories.length === 0) {
+        displayText = "All";
+      } else {
+        //otherwise map each value to its label and join with commas
+        const categoryLabels = filteredCategories.map(
+          (value) => this.categoryMapping[value].label
+        );
+        displayText = categoryLabels.join(", ");
+      }
+
+      //update the text
+      categoryBtnLabelEl.textContent = displayText;
+
+      this.logger.log("category-filter: updateButtonLabel -> " + displayText);
+    };
+
+    //sync the checkbox with the current category filter
+    const syncChecks = () => {
+      //Find all the option rows inside the Panel
+      const optionRows = categoryPanelEl.querySelectorAll(
+        ".category-filter-item"
+      );
+
+      this.logger.log(
+        "category-filter: syncChecks - nr. of rows = " + optionRows.length
+      );
+
+      //Loop through them
+      optionRows.forEach((optionRow) => {
+        //take the value of that row
+        const optionValue = optionRow.dataset.value;
+        //find the checkbox of that row
+        const checkboxEl = optionRow.querySelector(".category-filter-checkbox");
+
+        //case for All, remains selected if none is selected
+        if (optionValue === "") {
+          checkboxEl.checked = this.selectedCategories.size === 0;
+        } else {
+          checkboxEl.checked = this.selectedCategories.has(optionValue);
+        }
+
+        this.logger.log(
+          "category-filter: syncChecks - OptionValue = " +
+            " Checkbox checked = " +
+            checkboxEl.checked
+        );
+      });
+    };
+
+    //wiring events
+    categoryBtnEl.addEventListener("click", (event) => {
+      event.stopPropagation();
+
+      this.logger.log("category-filter: button clicked");
+
+      toggleCategoryPanel();
+    });
+    document.addEventListener("click", onDocClick);
+
+    //update labels and sync checkboxes
+    updateButtonLabel();
+    syncChecks();
+
+    //mount
+    categoryDivEl.appendChild(categoryBtnEl);
+    categoryDivEl.appendChild(categoryPanelEl);
+    categoryFilterEl.appendChild(categoryDivEl);
+
+    this.logger.log("category-filter: mounted");
+  }
+
   //Wipe out ul so no duplicates
   //Render each task
   //Update header/empty-state visibility
   render() {
     let currentArray = this.taskArray;
 
-    if (this.categoryFilter) {
-      currentArray = currentArray.filter(
-        (task) => task.category === this.categoryFilter
+    //filtering by selectedCategories
+    if (this.selectedCategories && this.selectedCategories.size > 0) {
+      currentArray = currentArray.filter((task) =>
+        this.selectedCategories.has(task.category)
       );
+
+      this.logger.log(
+        "render: filtering by categories = " +
+          Array.from(this.selectedCategories).join(", ")
+      );
+    } else {
+      this.logger.log("render: no category filter");
     }
 
     this.ulList.innerHTML = ""; //removing every single child element inside <ul> to not get duplicates
     currentArray.forEach((task) => this.renderTask(task));
-    this.logger.log("All tasks rendered succesfully");
+
+    this.logger.log("render: All tasks rendered succesfully");
 
     this.headerVisibility();
   }
@@ -385,14 +605,6 @@ class TaskList {
     task.subtasks.push(subtask);
     this.persist();
     this.renderSubtask(task, subtask, subUlListEl, { startEditing: true });
-  }
-
-  displayCategory(event) {
-    this.categoryFilter = event.target.value;
-
-    this.logger.log("Selected filter: " + this.categoryFilter);
-
-    this.render();
   }
 
   //Function to decide which sort should be applied after a new task has been added/page refresh
