@@ -45,6 +45,7 @@ class TaskList {
     },
   };
 
+  //used to build sortGroupInput
   sortOptions = {
     "cat-asc": "Sort by ascending category",
     "cat-desc": "Sort by descending category",
@@ -100,14 +101,15 @@ class TaskList {
     this.itemTemplateEl = itemTemplate.content.firstElementChild;
 
     //Selecting the widget template elements
-    this.input = this.rootEl.querySelector(".task-input");
+    this.input = this.rootEl.querySelector(".task-input"); //*rename: taskText/taskMessage
     this.ulList = this.rootEl.querySelector(".task-list");
-    this.form = this.rootEl.querySelector(".task-form");
+    this.form = this.rootEl.querySelector(".task-form"); //*rename
     if (this.form) {
       this.form.addEventListener("submit", (event) => this.formListener(event));
-    }
+    } //*task creation form
 
     //Building category selector and populate it with options from categoryMapping
+    //*Rename for categorySelect
     this.categorySelect = this.rootEl.querySelector(".task-category"); //for the form <select>
     if (this.categorySelect) {
       for (const categoryKey in this.categoryMapping) {
@@ -131,8 +133,8 @@ class TaskList {
       }
     }
 
-    //Building sort selector, create options and append to sortGroupInput
     this.sortGroupInput = this.rootEl.querySelector(".sort-actions");
+    //Building sort selector, create options and append to sortGroupInput
     if (this.sortGroupInput) {
       for (const sortKey in this.sortOptions) {
         const sortOptionEl = document.createElement("option");
@@ -247,7 +249,8 @@ class TaskList {
     this.logger.log(
       "category-filter: initializing buildCategoryFilterComponent()"
     );
-
+    //template* - cloningNode from html
+    //template for each html element - js for checkbox, value row, row label
     //Div
     const categoryDivEl = document.createElement("div");
     categoryDivEl.className = "category-filter";
@@ -274,6 +277,7 @@ class TaskList {
     categoryPanelEl.hidden = true; //start closed
 
     //Category Rows
+
     const addCategoryRow = (categoryValue, categoryText) => {
       //Row Element
       const categoryRowEl = document.createElement("div");
@@ -284,7 +288,7 @@ class TaskList {
       const categoryCheckEl = document.createElement("input");
       categoryCheckEl.type = "checkbox";
       categoryCheckEl.className = "category-filter-checkbox";
-      categoryCheckEl.tabIndex = -1; //so we can click the row
+      categoryCheckEl.tabIndex = -1; //so we can click the row - actually for the tab
 
       //Row Label
       const categoryLabelEl = document.createElement("span");
@@ -353,9 +357,10 @@ class TaskList {
       categoryPanelEl.appendChild(categoryRowEl);
     };
 
+    //added separately
     addCategoryRow("", "All");
 
-    //Build items
+    //Build row items from categoryMapping
     for (const [categoryKey, categoryData] of Object.entries(
       this.categoryMapping
     )) {
@@ -388,14 +393,14 @@ class TaskList {
       if (!categoryDivEl.contains(event.target)) {
         closeCategoryPanel();
 
-        this.logger("category-filter: otuside click - panel closed");
+        this.logger.log("category-filter: otuside click - panel closed");
       }
     };
 
     //Update the label of the button by the currentFilter
     const updateButtonLabel = () => {
       //Turn the Set into an Array
-      const selectedCategoriesArray = Array.from(this.selectedCategories);
+      const selectedCategoriesArray = Array.from(this.selectedCategories); //could also use an array
       console.log("From updateButtonLabel: " + this.selectedCategories);
 
       //Remove empty "" (refering to all option)
@@ -568,17 +573,16 @@ class TaskList {
       this.categorySelect.options[this.categorySelect.selectedIndex]; //take the index of the option selected
     const categoryId = selectedOption.value; //value = "high" | "medium" | "low"
 
-    this.appendTask(text, categoryId);
+    this.appendTask(text, categoryId); //same name everywhere
     this.input.value = "";
     this.categorySelect.selectedIndex = 0; //back to placeholder ""
   }
 
   //Define task and trim text
   //Push task to array, render it to DOM, update localStorage, update header visibility
-  //to know who label is, use categoryMapping[categoryId].label*
   appendTask(text, categoryId) {
     const task = {
-      title: text.trim(),
+      title: text.trim(), //*title or text everywhere (encode)/2 words in name
       checked: false,
       completed: false,
       createdAt: new Date().toISOString(), //create a date instance and convert to string in ISO format(lexicographically)
@@ -883,6 +887,8 @@ class TaskList {
         return;
       }
 
+      subEditBtn.classList.add("active");
+
       //turn the subTitle in an editable area
       subTitle.setAttribute("contenteditable", "true");
       subTitle.dataset.placeholder = "Type subtask...";
@@ -896,6 +902,9 @@ class TaskList {
 
       const finishEdit = () => {
         subTitle.setAttribute("contenteditable", "false");
+
+        subEditBtn.classList.remove("active");
+
         const newTitle = subTitle.textContent.trim();
 
         //if no title has been added, delete the subtask
