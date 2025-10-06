@@ -5,25 +5,25 @@ class Logger {
     this.prefix = prefix; //used for the constructor parameter of TaskList
   }
 
-  log(message) {
+  log(...args) {
     if (!this.enabled) {
       return;
     }
     if (this.prefix) {
-      console.log(this.prefix + message);
+      console.log(this.prefix, ...args);
     } else {
-      console.log(message);
+      console.log(...args);
     }
   }
 
-  error(message) {
+  error(...args) {
     if (!this.enabled) {
       return;
     }
     if (this.prefix) {
-      console.error(this.prefix + message);
+      console.error(this.prefix, ...args);
     } else {
-      console.error(message);
+      console.error(...args);
     }
   }
 }
@@ -45,7 +45,7 @@ class TaskList {
     },
   };
 
-  //used to build sortGroupInput
+  //used to build sortActionsSelect
   sortOptions = {
     "cat-asc": "Sort by ascending category",
     "cat-desc": "Sort by descending category",
@@ -53,8 +53,8 @@ class TaskList {
     "date-desc": "Sort by descending date",
   };
 
+  //for reference*
   categoryMappingArray = [
-    //for reference
     {
       label: "Not important",
       importance: 0,
@@ -69,87 +69,86 @@ class TaskList {
 
     this.rootEl = document.getElementById(taskListId); //Here we pass the element from DOM
     if (!this.rootEl) {
-      this.logger.error(`No element with id: "${taskListId}" found`);
+      this.logger.error(
+        "rootEl not found: " + this.rootEl + " with ID: " + taskListId
+      );
     }
 
     //Target widget template node, if false -> error
     const widgetTemplate = document.querySelector(".tasks-widget-template");
     if (!widgetTemplate) {
-      this.logger.error("Widget template not found");
+      this.logger.error("WidgeTemplate not found: " + widgetTemplate);
       return;
     }
 
     //Clone widget template and add on screen in div
     const cloneWidgetTemplate =
       widgetTemplate.content.firstElementChild.cloneNode(true);
+    if (!cloneWidgetTemplate) {
+      this.logger.error(
+        "cloneWidgetTemplate not found: " + cloneWidgetTemplate
+      );
+    }
     this.rootEl.appendChild(cloneWidgetTemplate);
 
     //Select title for change content
     const listTitle = this.rootEl.querySelector(".task-widget-title");
-    if (listTitle) {
+    if (!listTitle) {
+      this.logger.error("listTitle not found: " + listTitle);
+    } else {
       listTitle.textContent = taskListId;
     }
 
     //Check itemTemplate
     const itemTemplate = document.querySelector(".task-template");
     if (!itemTemplate) {
-      this.logger.error("task-template not found");
-      return;
+      this.logger.error("itemTemplate not found: " + itemTemplate);
     }
-
-    //Take the first child of the itemTemplate
-    this.itemTemplateEl = itemTemplate.content.firstElementChild;
+    this.itemTemplateLi = itemTemplate.content.firstElementChild;
 
     //Selecting the widget template elements
-    this.input = this.rootEl.querySelector(".task-input"); //*rename: taskText/taskMessage
-    this.ulList = this.rootEl.querySelector(".task-list");
-    this.form = this.rootEl.querySelector(".task-form"); //*rename
-    if (this.form) {
-      this.form.addEventListener("submit", (event) => this.formListener(event));
-    } //*task creation form
+    this.taskInputField = this.rootEl.querySelector(".task-input");
+    this.taskUlList = this.rootEl.querySelector(".task-list");
+    this.taskCreationForm = this.rootEl.querySelector(".task-form");
+    if (this.taskCreationForm) {
+      this.taskCreationForm.addEventListener("submit", (event) =>
+        this.formListener(event)
+      );
+    }
 
     //Building category selector and populate it with options from categoryMapping
-    //*Rename for categorySelect
-    this.categorySelect = this.rootEl.querySelector(".task-category"); //for the form <select>
-    if (this.categorySelect) {
+    this.taskCategorySelect = this.rootEl.querySelector(".task-category");
+    if (this.taskCategorySelect) {
       for (const categoryKey in this.categoryMapping) {
-        //using hasOwnProperty to not loop over inheritance
-        if (this.categoryMapping.hasOwnProperty(categoryKey)) {
-          //get the data object for this category
-          const categoryData = this.categoryMapping[categoryKey];
+        //get the data object for this category
+        const categoryData = this.categoryMapping[categoryKey];
 
-          //create a new option element
-          const optionEl = document.createElement("option");
+        const categoryOptionEl = document.createElement("option");
+        categoryOptionEl.value = categoryKey;
+        categoryOptionEl.textContent = categoryData.label;
 
-          //set the option value to the category key
-          optionEl.value = categoryKey;
-
-          //set the visible label text
-          optionEl.textContent = categoryData.label;
-
-          //append every option to the select
-          this.categorySelect.appendChild(optionEl);
-        }
+        this.taskCategorySelect.appendChild(categoryOptionEl);
       }
     }
 
-    this.sortGroupInput = this.rootEl.querySelector(".sort-actions");
-    //Building sort selector, create options and append to sortGroupInput
-    if (this.sortGroupInput) {
+    //Building sort selector, create options and append to sortActionsSelect
+    this.sortActionsSelect = this.rootEl.querySelector(".sort-actions");
+    if (this.sortActionsSelect) {
       for (const sortKey in this.sortOptions) {
         const sortOptionEl = document.createElement("option");
         sortOptionEl.value = sortKey;
         sortOptionEl.textContent = this.sortOptions[sortKey];
-        this.sortGroupInput.appendChild(sortOptionEl);
+        this.sortActionsSelect.appendChild(sortOptionEl);
       }
 
-      this.currentSort = this.sortGroupInput.value;
-      this.sortGroupInput.addEventListener("change", (event) =>
+      this.currentSort = this.sortActionsSelect.value;
+
+      this.sortActionsSelect.addEventListener("change", (event) =>
         this.stateToggleSort(event)
       );
     }
 
-    this.selectedCategories = new Set(); //keep track of selected categories
+    this.selectedCategoriesSet = new Set(); //keep track of selected categories
     //Select, Verify El, set current selected value to "" and build component
     const categoryFilterEl = this.rootEl.querySelector(".category-filter");
     if (categoryFilterEl) {
@@ -184,10 +183,13 @@ class TaskList {
   //Parse data, verify for array and render
   loadLocalStorage() {
     const stored = localStorage.getItem(this.storageKey);
-    this.logger.log("Got local storage item", this.storageKey);
+    this.logger.log(
+      "[loadLocalStorage] Attempting to load localStorage item storageKey: ",
+      this.storageKey
+    );
 
     if (!stored) {
-      this.logger.log("stored was false");
+      this.logger.log("[loadLocalStorage] stored was false: " + stored);
 
       this.taskArray = []; //make sure that the array is really empty so no previous tasks could appear
       this.render(); //UI still needs update
@@ -198,47 +200,68 @@ class TaskList {
     try {
       const parsed = JSON.parse(stored);
 
-      //Verify each task of local storage if it's falsy itself or for falsy properties
+      //Verify each task of local storage if it's false
       if (Array.isArray(parsed)) {
         const validTasks = parsed.filter((task, index) => {
-          //Verify is task is an object
-          if (!task || typeof task !== "object") {
-            this.logger.error(`Task nr. ${index} is not an object`, task);
+          //Verify if task is an array
+          if (!task || typeof task !== "object" || Array.isArray(task)) {
+            this.logger.error(
+              "[loadLocalStorage] Task nr." +
+                index +
+                "is not an object: " +
+                task
+            );
+
             return false;
           }
 
           if (typeof task.title !== "string") {
             this.logger.error(
-              `${task.title} property of task nr. ${index} is not a string`,
-              task
+              "[loadLocalStorage] task.title property of task nr. " +
+                index +
+                " is not a string: " +
+                task.title
             );
+
             return false;
           }
 
           if (typeof task.checked !== "boolean") {
             this.logger.error(
-              `${task.checked} property of task nr. ${index} is not an boolean`,
-              task
+              "[loadLocalStorage] task.checked property of task nr. " +
+                index +
+                " is not an boolean: ",
+              task.checked
             );
+
             return false;
           }
 
           if (typeof task.completed !== "boolean") {
             this.logger.error(
-              `${task.completed} property of task nr. ${index} is not an boolean`,
-              task
+              "[loadLocalStorage] task.completed property of task nr. " +
+                index +
+                " is not an boolean: ",
+              task.completed
             );
+
             return false;
           }
+
           return true;
         });
         this.taskArray = validTasks;
+
         this.logger.log(
-          "taskArray was loaded with the parsed & filtered version"
+          "[loadLocalStorage] taskArray was loaded with the parsed & verified version"
         );
+      } else {
+        this.logger.error("[loadLocalStorage] Parsed data is not an array");
       }
     } catch (err) {
-      this.logger.error("Could not parse taskArray from localStorage.");
+      this.logger.error(
+        "[loadLocalStorage] Could not parse taskArray from localStorage."
+      );
     }
 
     this.applyCurrentSort();
@@ -247,7 +270,7 @@ class TaskList {
 
   buildCategoryFilterComponent(categoryFilterEl) {
     this.logger.log(
-      "category-filter: initializing buildCategoryFilterComponent()"
+      "[buildCategoryFilterComponent] Initializing buildCategoryFilterComponent()"
     );
     //template* - cloningNode from html
     //template for each html element - js for checkbox, value row, row label
@@ -277,7 +300,6 @@ class TaskList {
     categoryPanelEl.hidden = true; //start closed
 
     //Category Rows
-
     const addCategoryRow = (categoryValue, categoryText) => {
       //Row Element
       const categoryRowEl = document.createElement("div");
@@ -299,7 +321,7 @@ class TaskList {
       categoryRowEl.appendChild(categoryLabelEl);
 
       this.logger.log(
-        "category-filter: add row - categoryValue = " +
+        "[buildCategoryFilterComponent][addCategoryRow] categoryValue = " +
           categoryValue +
           " text = " +
           categoryText
@@ -311,42 +333,44 @@ class TaskList {
         const rowValue = categoryRowEl.dataset.value;
 
         this.logger.log(
-          "category-filter: click row - rowValue = " +
+          "[buildCategoryFilterComponent][addCategoryRow] click row -> rowValue = " +
             rowValue +
-            " before selectedCategories is mutated: " +
-            this.selectedCategories
+            " before selectedCategoriesSet is mutated: " +
+            this.selectedCategoriesSet
         );
 
         if (rowValue === "") {
-          //All was clicked -> clear selectedCategories
-          this.selectedCategories.clear();
+          //All was clicked -> clear selectedCategoriesSet
+          this.selectedCategoriesSet.clear();
 
           this.logger.log(
-            "category-filter: All selected -> cleared selectedCategories: " +
-              this.selectedCategories
+            "[buildCategoryFilterComponent][addCategoryRow] All selected -> cleared selectedCategoriesSet: " +
+              this.selectedCategoriesSet
           );
         } else {
           //if we have that row value in Set (as we clicked the row) remove it, else add it
-          if (this.selectedCategories.has(rowValue)) {
-            this.selectedCategories.delete(rowValue);
+          if (this.selectedCategoriesSet.has(rowValue)) {
+            this.selectedCategoriesSet.delete(rowValue);
 
             this.logger.log(
-              "category-filter: removed " +
+              "[buildCategoryFilterComponent][addCategoryRow] removed " +
                 rowValue +
-                " from selectedCategories"
+                " from selectedCategoriesSet"
             );
           } else {
-            this.selectedCategories.add(rowValue);
+            this.selectedCategoriesSet.add(rowValue);
 
             this.logger.log(
-              "category-filter: added " + rowValue + " to selectedCategories"
+              "[buildCategoryFilterComponent][addCategoryRow] added " +
+                rowValue +
+                " to selectedCategoriesSet"
             );
           }
         }
 
         this.logger.log(
-          "category-filter: after categoryRowEl clicked - selected = " +
-            Array.from(this.selectedCategories).join(", ")
+          "[buildCategoryFilterComponent][addCategoryRow] after categoryRowEl clicked -> selected = " +
+            Array.from(this.selectedCategoriesSet).join(", ")
         );
 
         syncChecks();
@@ -371,21 +395,27 @@ class TaskList {
     const openCategoryPanel = () => {
       categoryPanelEl.hidden = false;
 
-      this.logger.log("category-filter: panel OPEN");
+      this.logger.log(
+        "[buildCategoryFilterComponent][openCategoryPanel] panel opened"
+      );
     };
 
     //Close Panel
     const closeCategoryPanel = () => {
       categoryPanelEl.hidden = true;
 
-      this.logger.log("category-filter: panel CLOSED");
+      this.logger.log(
+        "[buildCategoryFilterComponent][closeCategoryPanel] panel closed"
+      );
     };
 
     //Toggle Open/Close Panel. If it's hidden -> open, visible -> close
     const toggleCategoryPanel = () => {
       categoryPanelEl.hidden = !categoryPanelEl.hidden;
 
-      this.logger.log("category-filter: toggle: " + categoryPanelEl.hidden);
+      this.logger.log(
+        "[buildCategoryFilterComponent] toggle: " + categoryPanelEl.hidden
+      );
     };
 
     //Close panel when clicking outside of Div
@@ -393,17 +423,22 @@ class TaskList {
       if (!categoryDivEl.contains(event.target)) {
         closeCategoryPanel();
 
-        this.logger.log("category-filter: otuside click - panel closed");
+        this.logger.log(
+          "[buildCategoryFilterComponent] outside click -> panel closed"
+        );
       }
     };
 
     //Update the label of the button by the currentFilter
     const updateButtonLabel = () => {
       //Turn the Set into an Array
-      const selectedCategoriesArray = Array.from(this.selectedCategories); //could also use an array
-      console.log("From updateButtonLabel: " + this.selectedCategories);
+      const selectedCategoriesArray = Array.from(this.selectedCategoriesSet); //could also use an array
+      console.log(
+        "[buildCategoryFilterComponent][updateButtonLabel] " +
+          this.selectedCategoriesSet
+      );
 
-      //Remove empty "" (refering to all option)
+      //Remove empty "" (refering to the All option)
       const filteredCategories = selectedCategoriesArray.filter(
         (value) => value !== ""
       );
@@ -424,7 +459,10 @@ class TaskList {
       //update the text
       categoryBtnLabelEl.textContent = displayText;
 
-      this.logger.log("category-filter: updateButtonLabel -> " + displayText);
+      this.logger.log(
+        "[buildCategoryFilterComponent][updateButtonLabel] button label is " +
+          displayText
+      );
     };
 
     //sync the checkbox with the current category filter
@@ -435,7 +473,8 @@ class TaskList {
       );
 
       this.logger.log(
-        "category-filter: syncChecks - nr. of rows = " + optionRows.length
+        "[buildCategoryFilterComponent][syncChecks] Nr. of rows = " +
+          optionRows.length
       );
 
       //Loop through them
@@ -447,14 +486,15 @@ class TaskList {
 
         //case for All, remains selected if none is selected
         if (optionValue === "") {
-          checkboxEl.checked = this.selectedCategories.size === 0;
+          checkboxEl.checked = this.selectedCategoriesSet.size === 0;
         } else {
-          checkboxEl.checked = this.selectedCategories.has(optionValue);
+          checkboxEl.checked = this.selectedCategoriesSet.has(optionValue);
         }
 
         this.logger.log(
-          "category-filter: syncChecks - OptionValue = " +
-            " Checkbox checked = " +
+          "[buildCategoryFilterComponent][syncChecks] optionValue = " +
+            optionValue +
+            " checkbox.checked = " +
             checkboxEl.checked
         );
       });
@@ -464,10 +504,11 @@ class TaskList {
     categoryBtnEl.addEventListener("click", (event) => {
       event.stopPropagation();
 
-      this.logger.log("category-filter: button clicked");
+      this.logger.log("[buildCategoryFilterComponent] category button clicked");
 
       toggleCategoryPanel();
     });
+
     document.addEventListener("click", onDocClick);
 
     //update labels and sync checkboxes
@@ -479,7 +520,7 @@ class TaskList {
     categoryDivEl.appendChild(categoryPanelEl);
     categoryFilterEl.appendChild(categoryDivEl);
 
-    this.logger.log("category-filter: mounted");
+    this.logger.log("[buildCategoryFilterComponent] mounted");
   }
 
   //Wipe out ul so no duplicates
@@ -488,24 +529,22 @@ class TaskList {
   render() {
     let currentArray = this.taskArray;
 
-    //filtering by selectedCategories
-    if (this.selectedCategories && this.selectedCategories.size > 0) {
+    //filtering by selectedCategoriesSet
+    if (this.selectedCategoriesSet && this.selectedCategoriesSet.size > 0) {
       currentArray = currentArray.filter((task) =>
-        this.selectedCategories.has(task.category)
+        this.selectedCategoriesSet.has(task.category)
       );
 
       this.logger.log(
-        "render: filtering by categories = " +
-          Array.from(this.selectedCategories).join(", ")
+        "[render] Filtering by categories = " +
+          Array.from(this.selectedCategoriesSet).join(", ")
       );
-    } else {
-      this.logger.log("render: no category filter");
     }
 
-    this.ulList.innerHTML = ""; //removing every single child element inside <ul> to not get duplicates
+    this.taskUlList.innerHTML = ""; //removing every single child element inside <ul> to not get duplicates
     currentArray.forEach((task) => this.renderTask(task));
 
-    this.logger.log("render: All tasks rendered succesfully");
+    this.logger.log("[render] All tasks rendered succesfully");
 
     this.headerVisibility();
   }
@@ -522,38 +561,58 @@ class TaskList {
 
     //If elements are missing, return
     if (!emptyStateEl) {
-      this.logger.error(`Element ${emptyStateEl} not found`);
+      this.logger.error(
+        "[headerVisibility] Element emptyStateEl: " + emptyStateEl + "not found"
+      );
       return;
     }
 
     if (!headerTitle) {
-      this.logger.error(`Element ${headerTitle} not found`);
+      this.logger.error(
+        "[headerVisibility] Element headerTitle: " + headerTitle + "not found"
+      );
       return;
     }
 
     if (!headerActions) {
-      this.logger.error(`Element ${headerActions} not found`);
+      this.logger.error(
+        "[headerVisibility] Element headerActions: " +
+          headerActions +
+          "not found"
+      );
       return;
     }
 
     if (this.taskArray.length === 0) {
       emptyStateEl.classList.remove("hidden");
-      this.logger.log(`${emptyStateEl} removed`);
+      this.logger.log(
+        "[headerVisibility] emptyStateEl: " + emptyStateEl + " added"
+      );
 
       headerActions.classList.add("hidden");
-      this.logger.log(`${headerActions.className} hidden`);
+      this.logger.log(
+        "[headerVisibility] headerActions: " + headerActions + " hidden"
+      );
 
       headerTitle.classList.add("hidden");
-      this.logger.log(`${headerTitle.className} hidden`);
+      this.logger.log(
+        "[headerVisibility] headerTitle: " + headerTitle + " hidden"
+      );
     } else {
       emptyStateEl.classList.add("hidden");
-      this.logger.log(`${emptyStateEl} added`);
+      this.logger.log(
+        "[headerVisibility] emptyStateEl: " + emptyStateEl + " hidden"
+      );
 
       headerActions.classList.remove("hidden");
-      this.logger.log(`${headerActions.className} shown`);
+      this.logger.log(
+        "[headerVisibility] headerActions: " + headerActions + " added"
+      );
 
       headerTitle.classList.remove("hidden");
-      this.logger.log(`${headerTitle.className} shown`);
+      this.logger.log(
+        "[headerVisibility] headerTitle: " + headerTitle + " added"
+      );
     }
   }
 
@@ -561,33 +620,40 @@ class TaskList {
   //If a task is added -> prevent page refresh, trim for white spaces, verify text existance, append tasks and clear input
   formListener(event) {
     event.preventDefault();
+    this.logger.log("[formListener] Form submitted");
 
-    const text = this.input.value.trim();
+    const text = this.taskInputField.value.trim();
     if (!text) {
-      this.logger.log(`${text} is false: , ${typeof text}`);
+      this.logger.log("[formListener] text is false: " + text);
       return;
     }
 
-    //For the <select>
     const selectedOption =
-      this.categorySelect.options[this.categorySelect.selectedIndex]; //take the index of the option selected
+      this.taskCategorySelect.options[this.taskCategorySelect.selectedIndex]; //take the index of the option selected
     const categoryId = selectedOption.value; //value = "high" | "medium" | "low"
 
-    this.appendTask(text, categoryId); //same name everywhere
-    this.input.value = "";
-    this.categorySelect.selectedIndex = 0; //back to placeholder ""
+    this.logger.log(
+      "[formListener] Adding task: " + text + " with category: " + categoryId
+    );
+
+    this.appendTask(text, categoryId); //same name everywhere*
+
+    this.logger.log("[formListener] Task appended successfully");
+
+    this.taskInputField.value = "";
+    this.taskCategorySelect.selectedIndex = 0; //back to placeholder ""
   }
 
   //Define task and trim text
   //Push task to array, render it to DOM, update localStorage, update header visibility
   appendTask(text, categoryId) {
     const task = {
-      title: text.trim(), //*title or text everywhere (encode)/2 words in name
+      title: text.trim(), //*title or text everywhere/2 words in name
       checked: false,
       completed: false,
       createdAt: new Date().toISOString(), //create a date instance and convert to string in ISO format(lexicographically)
       category: categoryId, //variable so we can change dynamically which part of map we refer to; we use categoryValue for reference at categoryMapping
-      subtasks: [], //create an subtask array for each task
+      subtasks: [], //create a subtask array for each task
     };
 
     this.taskArray.push(task);
@@ -607,8 +673,12 @@ class TaskList {
     };
 
     task.subtasks.push(subtask);
+
     this.persist();
-    this.renderSubtask(task, subtask, subUlListEl, { startEditing: true });
+
+    this.renderSubtask(task, subtask, subUlListEl, {
+      startEditing: true,
+    });
   }
 
   //Function to decide which sort should be applied after a new task has been added/page refresh
@@ -633,6 +703,11 @@ class TaskList {
         this.sortDateDesc();
         break;
       }
+
+      default: {
+        this.logger.error("[applyCurrentSort] Using default sort: date-asc");
+        this.sortDateAsc();
+      }
     }
   }
 
@@ -656,37 +731,43 @@ class TaskList {
   //Update DOM elements with the array fields, delete and edit button
   //Update the local storage when check, delete and edit
   renderTask(task) {
-    const li = this.itemTemplateEl.cloneNode(true);
+    //li
+    const taskLi = this.itemTemplateLi.cloneNode(true);
 
-    const checkbox = li.querySelector(".task-checkbox");
-    checkbox.checked = task.checked;
+    //checkbox
+    const taskCheckbox = taskLi.querySelector(".task-checkbox");
+    taskCheckbox.checked = task.checked;
 
-    checkbox.addEventListener("change", () => {
+    taskCheckbox.addEventListener("change", () => {
       //getting the source of truth from the array
       const index = this.taskArray.indexOf(task);
 
-      this.taskArray[index].checked = checkbox.checked;
-      this.logger.log(`Task checkbox nr. ${index} is checked`);
+      this.taskArray[index].checked = taskCheckbox.checked;
+
+      this.logger.log(
+        "[renderTask] Task checkbox nr. " + index + " is checked"
+      );
+
       this.persist();
     });
 
-    const titleSpan = li.querySelector(".task-title");
-    const labelSpan = li.querySelector(".task-label");
+    //span and label
+    const titleSpan = taskLi.querySelector(".task-title");
+    const labelSpan = taskLi.querySelector(".task-label");
 
     titleSpan.textContent = task.title;
     labelSpan.textContent = this.categoryMapping[task.category].label;
 
-    //button and ul for the subtasks
-    const addSubBtn = li.querySelector(".add-subtask-btn");
-    let subUlListEl = li.querySelector(".subtask-container");
+    //add button and ul for the subtasks
+    const addSubBtn = taskLi.querySelector(".add-subtask-btn");
 
     //helper to create subtask Ul only when needed
-    const createSubtaskList = () => {
-      if (!subUlListEl) {
-        subUlListEl = document.createElement("ul");
-        subUlListEl.className = "subtask-container";
-        li.appendChild(subUlListEl);
-      }
+    const createSubtaskContainer = () => {
+      const subUlListEl = document.createElement("ul");
+      subUlListEl.className = "subtask-container";
+
+      taskLi.appendChild(subUlListEl);
+
       return subUlListEl;
     };
 
@@ -697,7 +778,7 @@ class TaskList {
 
     //if we have any subtasks in this task, call function to create them and then renderSubtask for each
     if (task.subtasks.length > 0) {
-      const subUlListEl = createSubtaskList();
+      const subUlListEl = createSubtaskContainer();
 
       task.subtasks.forEach((subtask) =>
         this.renderSubtask(task, subtask, subUlListEl)
@@ -706,11 +787,11 @@ class TaskList {
 
     //button for adding subtasks
     addSubBtn.addEventListener("click", () => {
-      const createdUl = createSubtaskList();
+      const createdUl = createSubtaskContainer();
       this.appendSubtask(task, createdUl, "");
     });
 
-    const editBtn = li.querySelector(".task-edit-btn");
+    const editBtn = taskLi.querySelector(".task-edit-btn");
     editBtn.addEventListener("click", (event) => {
       if (task.completed) {
         return;
@@ -718,7 +799,7 @@ class TaskList {
 
       const eventEditBtn = event.currentTarget; //target btn if img is clicked
       if (!eventEditBtn) {
-        this.logger.error("Edit button is false in renderTask()");
+        this.logger.error("[renderTask] Edit button is false: " + eventEditBtn);
       }
       eventEditBtn.classList.add("active");
 
@@ -738,6 +819,9 @@ class TaskList {
         //Remove event listeners
         titleSpan.removeEventListener("blur", finishedEditing);
         titleSpan.removeEventListener("keydown", onEnter);
+
+        this.logger.log("[renderTask][finishedEditing] Task edited");
+
         this.persist();
       };
 
@@ -754,19 +838,19 @@ class TaskList {
       titleSpan.addEventListener("keydown", onEnter);
     });
 
-    const delBtn = li.querySelector(".task-delete-btn");
+    const delBtn = taskLi.querySelector(".task-delete-btn");
     delBtn.addEventListener("click", () => {
       const index = this.taskArray.indexOf(task);
-      this.handleDeleteTask(index, li);
+      this.handleDeleteTask(index, taskLi);
     });
 
     //These should apply whenever we render, so best place is here
-    li.classList.toggle("completed", task.completed); //make the DOM match the object property(BulkCompleteSelected())
-    editBtn.classList.toggle("low-opacity", task.completed); //add styling
+    taskLi.classList.toggle("completed", task.completed);
+    editBtn.classList.toggle("low-opacity", task.completed);
     labelSpan.classList.toggle("low-opacity", task.completed);
-    editBtn.disabled = task.completed; //a boolean that helps disable "on/off"
+    editBtn.disabled = task.completed;
 
-    this.ulList.appendChild(li);
+    this.taskUlList.appendChild(taskLi);
   }
 
   renderSubtask(task, subtask, subUlListEl, options = {}) {
@@ -810,8 +894,13 @@ class TaskList {
     //Check subtask
     subCheckbox.addEventListener("click", () => {
       subtask.checked = subCheckbox.checked;
+
       subCompleteBtn.disabled = !subtask.checked;
-      this.logger.log(`subCheckbox is checked`);
+
+      this.logger.log(
+        "[renderSubtask] subCompleteBtn is: " + subCompleteBtn.disabled
+      );
+
       this.persist();
     });
 
@@ -819,15 +908,18 @@ class TaskList {
     subCompleteBtn.addEventListener("click", () => {
       //complete only once
       if (subtask.completed) {
-        this.logger.log("Subtask is already completed");
+        this.logger.log("[renderSubtask] Subtask is already completed");
         return;
       }
+
       if (!subtask.checked) {
         this.logger.error("Subtask must be checked in order to be completed");
         return;
       }
+
       subtask.completed = !subtask.completed;
       subLi.classList.toggle("completed", subtask.completed);
+
       this.persist();
     });
 
@@ -858,6 +950,7 @@ class TaskList {
     //handle delete subtask
     subDelBtn.addEventListener("click", () => {
       const index = task.subtasks.indexOf(subtask);
+
       this.handleDeleteSubtask(task, index, subLi);
     });
 
@@ -895,6 +988,8 @@ class TaskList {
 
       if (isSubtaskNew) {
         subTitle.textContent = "";
+
+        this.logger.log("[renderSubtask][startSubtaskEdit] Subtask is new");
       }
       subTitle.focus();
 
@@ -907,9 +1002,15 @@ class TaskList {
 
         const newTitle = subTitle.textContent.trim();
 
-        //if no title has been added, delete the subtask
+        //if empty title has been added, delete the subtask
         if (!newTitle) {
           const subIndex = task.subtasks.indexOf(subtask);
+
+          this.logger.log(
+            "[renderSubtask][finishEdit] Empty title detected, subtask will be deleted: " +
+              task.subtasks[subIndex]
+          );
+
           if (subIndex > -1) {
             task.subtasks.splice(subIndex, 1);
           }
@@ -960,13 +1061,17 @@ class TaskList {
   //Update the local storage
   persist() {
     localStorage.setItem(this.storageKey, JSON.stringify(this.taskArray));
-    this.logger.log("local storage was updated");
+
+    this.logger.log("[persist] Local storage was updated");
   }
 
   //Delete a specific object from the array
   deleteTask(index) {
+    this.logger.log(
+      "[deleteTask] Task: " + this.taskArray[index] + " will be deleted"
+    );
+
     this.taskArray.splice(index, 1);
-    this.logger.log("Task at index: ", index, "was deleted");
   }
 
   stateToggleSort(event) {
@@ -984,6 +1089,8 @@ class TaskList {
         this.categoryMapping[b.category].importance
       );
     });
+
+    this.logger.log("[sortCategAsc] taskArray sorted by asc categ");
   }
 
   sortCategDesc() {
@@ -993,6 +1100,8 @@ class TaskList {
         this.categoryMapping[a.category].importance
       );
     });
+
+    this.logger.log("[sortCategDesc] taskArray sorted by desc categ");
   }
 
   //Sort the array in ascending order and reflect on DOM
@@ -1000,6 +1109,8 @@ class TaskList {
     this.taskArray.sort(
       (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
     );
+
+    this.logger.log("[sortDateAsc] taskArray sorted by asc date");
   }
 
   //Sort the array in descending order and reflect on DOM
@@ -1007,6 +1118,8 @@ class TaskList {
     this.taskArray.sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
+
+    this.logger.log("[sortDateDesc] taskArray sorted by desc date");
   }
 
   //Assign a new array to not delete the tasks from the current one and refelct on DOM
@@ -1026,7 +1139,7 @@ class TaskList {
     this.render();
 
     this.logger.log(
-      "bulk-complete-btn completed: " + completedTasks + " tasks"
+      "[bulkCompleteSelected] completed: " + completedTasks + " tasks"
     );
   }
 
@@ -1045,7 +1158,7 @@ class TaskList {
     this.persist();
     this.render();
 
-    this.logger.log("bulk-delete-btn removed: " + removed + " tasks");
+    this.logger.log("[bulkDeleteSelected] removed: " + removed + " tasks");
   }
 
   //Handle the delete process of a task -> delete from array, update local storage, remove li from DOM, update headers/empty-state
@@ -1054,22 +1167,30 @@ class TaskList {
 
     //check if the subtasks are completed
     if (!this.taskDone(task)) {
-      this.logger.error("Subtasks are not completed, task cannot be deleted");
+      this.logger.error(
+        "[handleDeleteTask] Subtasks are not completed, task cannot be deleted"
+      );
       return;
     }
 
     this.deleteTask(index);
+
+    this.logger.log("[handleDeleteTask] Task deleted successfully");
+
     this.persist();
     li.remove(); //done like this because it's just for a single element, instead of calling render()
     this.headerVisibility();
   }
 
   handleDeleteSubtask(task, index, subLi) {
+    this.logger.log(
+      "[handleDeleteSubtask] Will delete subtask: " + task.subtasks[index].title
+    );
+
     task.subtasks.splice(index, 1);
     this.persist();
-    subLi.remove();
 
-    this.logger.log(`Deleted subtask at index: ${index}`);
+    subLi.remove();
   }
 }
 
