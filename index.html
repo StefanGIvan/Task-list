@@ -57,9 +57,8 @@
               <!--Select for Sort actions-->
               <select class="sort-actions"></select>
 
-              <!--Select by certain category (custom selector)-->
-              <div class="category-filter"></div>
-              <!--template element for the rows-->
+              <!--Custom category selector (mount point)-->
+              <div class="category-filter-mount"></div>
 
               <!--Div for Bulk actions-->
               <div class="bulk-actions">
@@ -101,6 +100,27 @@
           </div>
           <ul class="task-list" aria-live="polite"></ul>
         </div>
+      </div>
+    </template>
+
+    <!--Select by certain category (custom selector)-->
+    <!--Template for the custom selector main component-->
+    <template class="category-filter-template">
+      <div class="category-filter">
+        <button type="button" class="category-filter-button">
+          <span class="category-filter-label"></span>
+          <span class="category-filter-chevron">⌄</span>
+        </button>
+
+        <div class="category-filter-panel"></div>
+      </div>
+    </template>
+
+    <!--Template for the custom selector row-->
+    <template class="category-row-template">
+      <div class="category-filter-row">
+        <input type="checkbox" class="category-filter-checkbox" />
+        <span class="category-filter-text"></span>
       </div>
     </template>
 
@@ -147,6 +167,6 @@
       >You need to allow Javascript in order for the page to
       loadLocalStorage.</noscript
     >
-    <script src="scriptObject.js" defer></script>
+    <script type="module" src="./JS/main.js" defer></script>
   </body>
 </html>

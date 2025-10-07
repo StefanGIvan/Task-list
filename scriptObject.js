@@ -150,9 +150,10 @@ class TaskList {
 
     this.selectedCategoriesSet = new Set(); //keep track of selected categories
     //Select, Verify El, set current selected value to "" and build component
-    const categoryFilterEl = this.rootEl.querySelector(".category-filter");
+    const categoryFilterEl = this.rootEl.querySelector(
+      ".category-filter-mount"
+    );
     if (categoryFilterEl) {
-      categoryFilterEl.innerHTML = "";
       this.buildCategoryFilterComponent(categoryFilterEl);
     }
 
@@ -274,51 +275,43 @@ class TaskList {
     );
     //template* - cloningNode from html
     //template for each html element - js for checkbox, value row, row label
-    //Div
-    const categoryDivEl = document.createElement("div");
-    categoryDivEl.className = "category-filter";
+
+    const filterTemplate = document.querySelector(".category-filter-template");
+    const rowTemplate = document.querySelector(".category-row-template");
+
+    categoryFilterEl.innerHTML = "";
+
+    //take the content of the template, clone it, and then take the first element of the clone
+    const categoryDivEl =
+      filterTemplate.content.cloneNode(true).firstElementChild;
 
     //Button
-    const categoryBtnEl = document.createElement("button");
-    categoryBtnEl.type = "button";
-    categoryBtnEl.className = "category-filter-button";
-
+    const categoryBtnEl = categoryDivEl.querySelector(
+      ".category-filter-button"
+    );
     //Button Label
-    const categoryBtnLabelEl = document.createElement("span");
-    categoryBtnLabelEl.className = "category-filter-label";
-    categoryBtnEl.appendChild(categoryBtnLabelEl);
-
-    //Chevron
-    const categoryChevronEl = document.createElement("span");
-    categoryChevronEl.className = "category-filter-chevron";
-    categoryChevronEl.textContent = "⌄";
-    categoryBtnEl.appendChild(categoryChevronEl);
+    const categoryBtnLabelEl = categoryDivEl.querySelector(
+      ".category-filter-label"
+    );
 
     //Panel
-    const categoryPanelEl = document.createElement("div");
-    categoryPanelEl.className = "category-filter-panel";
+    const categoryPanelEl = categoryDivEl.querySelector(
+      ".category-filter-panel"
+    );
     categoryPanelEl.hidden = true; //start closed
 
     //Category Rows
     const addCategoryRow = (categoryValue, categoryText) => {
       //Row Element
-      const categoryRowEl = document.createElement("div");
-      categoryRowEl.className = "category-filter-item";
+      const categoryRowEl =
+        rowTemplate.content.cloneNode(true).firstElementChild;
       categoryRowEl.dataset.value = categoryValue;
 
-      //Row checkbox
-      const categoryCheckEl = document.createElement("input");
-      categoryCheckEl.type = "checkbox";
-      categoryCheckEl.className = "category-filter-checkbox";
-      categoryCheckEl.tabIndex = -1; //so we can click the row - actually for the tab
-
       //Row Label
-      const categoryLabelEl = document.createElement("span");
+      const categoryLabelEl = categoryRowEl.querySelector(
+        ".category-filter-text"
+      );
       categoryLabelEl.textContent = categoryText;
-
-      //mount checkbox and label
-      categoryRowEl.appendChild(categoryCheckEl);
-      categoryRowEl.appendChild(categoryLabelEl);
 
       this.logger.log(
         "[buildCategoryFilterComponent][addCategoryRow] categoryValue = " +
@@ -377,7 +370,6 @@ class TaskList {
         updateButtonLabel();
         this.render();
       });
-
       categoryPanelEl.appendChild(categoryRowEl);
     };
 
@@ -390,15 +382,6 @@ class TaskList {
     )) {
       addCategoryRow(categoryKey, categoryData.label);
     }
-
-    //Open Panel
-    const openCategoryPanel = () => {
-      categoryPanelEl.hidden = false;
-
-      this.logger.log(
-        "[buildCategoryFilterComponent][openCategoryPanel] panel opened"
-      );
-    };
 
     //Close Panel
     const closeCategoryPanel = () => {
@@ -469,7 +452,7 @@ class TaskList {
     const syncChecks = () => {
       //Find all the option rows inside the Panel
       const optionRows = categoryPanelEl.querySelectorAll(
-        ".category-filter-item"
+        ".category-filter-row"
       );
 
       this.logger.log(
@@ -515,9 +498,6 @@ class TaskList {
     updateButtonLabel();
     syncChecks();
 
-    //mount
-    categoryDivEl.appendChild(categoryBtnEl);
-    categoryDivEl.appendChild(categoryPanelEl);
     categoryFilterEl.appendChild(categoryDivEl);
 
     this.logger.log("[buildCategoryFilterComponent] mounted");
