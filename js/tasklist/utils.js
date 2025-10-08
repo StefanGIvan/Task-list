@@ -10,5 +10,5 @@ export function allSubtasksDone(task) {
 
 //Task is only completed if subtasks are completed and it is completed too
 export function taskDone(task) {
-  return task.completed && this.allSubtasksDone(task);
+  return task.checked && this.allSubtasksDone(task);
 }

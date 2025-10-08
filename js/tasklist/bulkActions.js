@@ -25,7 +25,7 @@ export function bulkDeleteSelected() {
   const before = this.taskArray.length;
 
   this.taskArray = this.taskArray.filter(
-    (task) => !(task.checked || task.allSubtasksDone(task))
+    (task) => !(task.checked && this.allSubtasksDone(task))
   );
 
   const removed = before - this.taskArray.length;

@@ -214,6 +214,6 @@ TaskList.prototype.bulkCompleteSelected = bulkCompleteSelected;
 TaskList.prototype.bulkDeleteSelected = bulkDeleteSelected;
 
 TaskList.prototype.allSubtasksDone = allSubtasksDone;
-TaskList.prototype.taskDOne = taskDone;
+TaskList.prototype.taskDone = taskDone;
 
 export { TaskList };
